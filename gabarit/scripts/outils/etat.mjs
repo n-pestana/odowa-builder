@@ -69,7 +69,7 @@ export function collecterEtat() {
     if (arbre(devDistant) === arbre(prodDistant)) {
       lignes.push('EN ATTENTE DE MISE EN PROD : rien. Le site de test et le site en ligne sont identiques.');
     } else {
-      const fichiers = git('diff', '--name-status', prodDistant, devDistant).split('\n').filter(Boolean);
+      const fichiers = git('diff', '--no-renames', '--name-status', prodDistant, devDistant).split('\n').filter(Boolean);
       lignes.push(`EN ATTENTE DE MISE EN PROD : ${fichiers.length} fichier(s) different(s) entre le site de test et le site en ligne`);
       for (const f of fichiers.slice(0, 30)) lignes.push(`  ${f.replace(/^A\t/, 'ajoute   ').replace(/^M\t/, 'modifie  ').replace(/^D\t/, 'supprime ')}`);
       if (fichiers.length > 30) lignes.push(`  ... et ${fichiers.length - 30} autre(s)`);

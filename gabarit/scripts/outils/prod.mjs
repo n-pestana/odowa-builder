@@ -42,7 +42,7 @@ const PREFIXES = { 'prod/': 'publier', 'retour/': 'annuler-publication' };
 const actionDeLaBranche = (ref) => Object.entries(PREFIXES).find(([prefixe]) => ref.startsWith(prefixe))?.[1];
 
 function listeFichiers(avant, apres) {
-  return git('diff', '--name-status', avant, apres)
+  return git('diff', '--no-renames', '--name-status', avant, apres)
     .split('\n')
     .filter(Boolean)
     .map((l) => l.replace(/^A\t/, 'ajoute   ').replace(/^M\t/, 'modifie  ').replace(/^D\t/, 'supprime '));

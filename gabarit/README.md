@@ -67,6 +67,12 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 - **Cause** : l'étape lançait `npm run check -- --mode=dev` au complet.
 - **Réflexe** : elle lance `--seulement=indexation,robots`. Les autres contrôles tournent dans le job `controles` et bloquent la mise en prod. `check:envers` le vérifie dans les deux sens (lien cassé : publication autorisée ; `noindex` ou `robots.txt` manquant : refusée).
 
+### 12. Un fichier renommé apparaissait en code brut dans la liste de ce qui part en ligne
+
+- **Vécu** (pilote, mise à jour 9cf9f23) : `preparer-publication` a listé `R073	.claude/skills/apercu/SKILL.md	.claude/skills/voir/SKILL.md` au lieu de « supprime » et « ajoute ».
+- **Cause** : `git diff --name-status` détecte les renommages (`R` + taux de ressemblance), que la traduction ne connaissait pas.
+- **Réflexe** : `--no-renames` dans `prod.mjs`, `etat.mjs` et `annuler-modifs.mjs`. Un renommage s'affiche comme une suppression plus un ajout.
+
 ## Les commandes
 
 | Commande client | Script | Touche le site en ligne |

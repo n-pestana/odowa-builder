@@ -10,7 +10,7 @@ const dev = commit(`origin/${DEV}`);
 const prod = commit(`origin/${PROD}`);
 const local = git('status', '--porcelain').split('\n').filter(Boolean);
 const nonEnvoyes = Number(git('rev-list', '--count', `origin/${DEV}..HEAD`));
-const fichiers = git('diff', '--name-status', prod, dev).split('\n').filter(Boolean);
+const fichiers = git('diff', '--no-renames', '--name-status', prod, dev).split('\n').filter(Boolean);
 
 if (fichiers.length === 0 && local.length === 0 && nonEnvoyes === 0) {
   arreter('Rien a annuler : le site de test est deja identique au site en ligne.', 0);
