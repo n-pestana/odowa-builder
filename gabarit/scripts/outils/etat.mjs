@@ -1,4 +1,6 @@
 // /etat : ou en est le site ? Lecture seule, ne modifie rien.
+//   node scripts/outils/etat.mjs           rapport detaille (pour Claude)
+//   node scripts/outils/etat.mjs --carte   carte d'etat a montrer telle quelle au client
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -16,6 +18,7 @@ import {
   githubEssai,
   passageDuWorkflow,
 } from './lib.mjs';
+import { carte } from './carte.mjs';
 
 const LIBELLES = { vert: 'VERT', rouge: 'ROUGE', 'en-cours': 'en cours', absent: 'pas encore lance' };
 const essai = (fonction) => {
@@ -91,4 +94,31 @@ export function collecterEtat() {
   return lignes.join('\n');
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) console.log(collecterEtat());
+export function carteEtat() {
+  const joignable = gitEssai('fetch', '--quiet', '--prune', 'origin') !== null;
+  const branche = gitEssai('rev-parse', '--abbrev-ref', 'HEAD') ?? '?';
+  const devDistant = gitEssai('rev-parse', `origin/${DEV}`);
+  const prodDistant = gitEssai('rev-parse', `origin/${PROD}`);
+  const nonEnregistres = (gitEssai('status', '--porcelain') ?? '').split('\n').filter(Boolean).length;
+  const nonEnvoyes = devDistant ? Number(gitEssai('rev-list', '--count', `origin/${DEV}..HEAD`) ?? 0) : 0;
+  let differences = null;
+  if (devDistant && prodDistant) {
+    differences = arbre(devDistant) === arbre(prodDistant) ? 0 : git('diff', '--name-only', prodDistant, devDistant).split('\n').filter(Boolean).length;
+  }
+  return carte({
+    joignable,
+    surProd: branche === PROD,
+    enCoursLocal: nonEnregistres + nonEnvoyes,
+    publicationTest: devDistant ? essai(() => passageDuWorkflow('dev.yml', devDistant)).etat : 'inconnu',
+    controlesTest: devDistant ? essai(() => controlesDuCommit(devDistant)).etat : 'inconnu',
+    differences,
+    deploiementProd: prodDistant ? essai(() => passageDuWorkflow('prod.yml', prodDistant)).etat : 'inconnu',
+    dateProd: prodDistant ? dateFr(git('log', '-1', '--format=%cI', prodDistant)) : null,
+    urlDev: config.urlDev,
+    urlProd: config.urlProd,
+  });
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  console.log(process.argv.includes('--carte') ? carteEtat() : collecterEtat());
+}

@@ -33,7 +33,7 @@ try {
 
   console.log(`Site : ${config.nomSite}. Branche courante : ${branche}.`);
   if (branche === config.brancheProd) console.log(`ANORMAL : la session est sur "${config.brancheProd}". Passer sur "${config.brancheDev}" avant toute modification.`);
-  console.log('Le client n\'est pas technicien. Suivre CLAUDE.md. Commandes disponibles : /aide.');
+  console.log('Le client n\'est pas technicien. Suivre CLAUDE.md. Premiere reponse : l\'accueil (CLAUDE.md, « L\'accueil »), carte d\'etat comprise.');
 } catch {
   /* ne jamais bloquer la session */
 }

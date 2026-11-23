@@ -3,7 +3,9 @@ name: aide
 description: Liste les commandes disponibles pour gérer le site. À utiliser quand le client demande ce qu'il peut faire, ou comment mettre en ligne.
 ---
 
-Affiche au client exactement cette liste, sans rien lancer et sans rien ajouter d'autre qu'une phrase d'accueil :
+Affiche au client exactement ce qui suit, sans rien lancer et sans rien ajouter :
+
+✨ **Odowa Builder** · ce que vous pouvez faire
 
 **Vous pouvez me demander une modification en français courant**, par exemple « change les horaires », « ajoute une page sur nos tarifs », « remplace la photo de l'accueil ».
 

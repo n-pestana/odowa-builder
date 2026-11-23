@@ -16,6 +16,7 @@ odowa-builder/                  ce dépôt (privé, Nicolas seul)
 ├── config.env                  valeurs communes, non versionné
 ├── secrets.env                 secrets communs, non versionné
 ├── INSTALLATION.md             mise en place de l'usine, puis d'un client
+├── MISE-EN-ROUTE.md            liste de mise en route d'un client et mail de bienvenue
 └── BRIEF-MAINTENANCE.md        mission de validation, pour Claude Code
 ```
 

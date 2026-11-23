@@ -78,6 +78,7 @@ const cas = [
   ['git status', bash('git status'), 'autorise'],
   ['build et controles', bash('npm run build && npm run check'), 'autorise'],
   ['commande /etat', bash('node scripts/outils/etat.mjs'), 'autorise'],
+  ['carte d\'etat', bash('node scripts/outils/etat.mjs --carte'), 'autorise'],
   ['commande /voir', bash('node scripts/outils/apercu.mjs --message "Nouveaux horaires"'), 'autorise'],
   ['commande prod (le script verifie le jeton)', bash('node scripts/outils/prod.mjs attendre 12'), 'autorise'],
   ['sortie d\'un script vers /tmp', bash('node scripts/outils/etat.mjs > /tmp/etat.txt'), 'autorise'],

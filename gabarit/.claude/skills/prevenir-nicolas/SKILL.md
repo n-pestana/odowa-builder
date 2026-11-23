@@ -14,6 +14,6 @@ Préviens Nicolas. Message du client, s'il en a donné un : $ARGUMENTS
 2. Rédige un message court et factuel pour Nicolas, qui est développeur : ce que le client voulait faire (avec ses mots), ce qui s'est passé, le message d'erreur exact s'il y en a un, ce que tu as déjà essayé. Pas de supposition présentée comme un fait.
 3. Lance `node scripts/outils/alerter.mjs --urgence <urgence> --message "<message>"`. L'état du site est joint automatiquement.
 
-Dis ensuite au client que Nicolas est prévenu et donne le numéro du ticket. Si l'envoi a **échoué**, dis-le clairement et donne les coordonnées de secours affichées par le script : ne laisse jamais le client croire que Nicolas est prévenu s'il ne l'est pas.
+Dis ensuite au client, sur une ligne : « 📨 Nicolas est prévenu (demande n° *numéro*). » Ne donne pas de lien vers GitHub. Si l'envoi a **échoué**, dis-le clairement et donne les coordonnées de secours affichées par le script : ne laisse jamais le client croire que Nicolas est prévenu s'il ne l'est pas.
 
 Si l'urgence est `prod-cassee` et que la dernière mise en ligne est récente, rappelle au client qu'il peut taper `/annuler-publication`.

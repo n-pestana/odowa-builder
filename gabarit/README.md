@@ -55,13 +55,13 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 - **Cause** : `nvm use` prend la plus récente des versions 22 **déjà installées**, sans en télécharger. Sur GitHub, `setup-node` résout `22` vers la dernière 22.x publiée (v22.23.5 constatée), donc le CI n'est pas touché.
 - **Réflexe** : en cas d'erreur de version, `nvm install 22` (télécharge la dernière 22.x), puis `nvm use`.
 
-### 9. Une session cloud travaille sur une branche `claude/…`, pas sur `dev`
+### 10. Une session cloud travaille sur une branche `claude/…`, pas sur `dev`
 
 - **Vécu** (pilote, session cloud) : la session démarre sur `claude/zen-planck-tlrxet`, avec la consigne de l'environnement cloud d'y travailler. L'ancienne règle « toujours sur `dev` » la contredisait ; Claude l'a signalé au lieu d'agir.
 - **Pourquoi ça marche quand même** : `apercu.mjs` enregistre sur la branche courante, se recale sur `origin/dev` et pousse `HEAD:refs/heads/dev`. `prod.mjs` ne regarde que `origin/dev`. La branche `claude/…` n'a pas été poussée sur GitHub.
 - **Réflexe** : ne pas forcer un passage sur `dev` au démarrage (ce serait contredire l'environnement cloud). `CLAUDE.md` dit de rester sur la branche de départ, `dev` ou `claude/…`, et seule `main` est refusée.
 
-### 10. Un contrôle rouge ne doit pas empêcher de publier le site de test
+### 11. Un contrôle rouge ne doit pas empêcher de publier le site de test
 
 - **Vécu** (pilote, test 7) : un lien cassé faisait échouer l'étape « Vérifier que le site de test n'est pas indexable » de `dev.yml`, qui lançait tous les contrôles. La publication était sautée : le client était envoyé voir un site de test qui n'avait pas changé.
 - **Cause** : l'étape lançait `npm run check -- --mode=dev` au complet.
@@ -81,6 +81,10 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 | `/prevenir-nicolas` | `scripts/outils/alerter.mjs` | Non |
 
 Les commandes sont des fichiers `SKILL.md` courts dans `.claude/skills/`. La logique est dans les scripts, qui sont déterministes : Claude orchestre, il n'improvise pas les opérations git.
+
+**La carte d'état.** Chaque réponse utile au client se termine par la sortie de `node scripts/outils/etat.mjs --carte`, recopiée telle quelle (`CLAUDE.md`). Les couleurs (🟢 🟡 ⏳ 🔴 ⚪) sont décidées par `scripts/outils/carte.mjs`, une fonction pure, jamais par Claude. Règle : une donnée inconnue donne ⚪, jamais 🟢. `scripts/controles/test-carte.mjs` le vérifie sur 17 situations, lancé par `npm run check:hook`.
+
+**Renommer une commande.** Le nom apparaît dans le dossier du `SKILL.md`, son `name:`, l'autorisation (`jeton.mjs`, `PREFIXES` de `prod.mjs`) pour les deux commandes qui touchent le site en ligne, et la documentation. `npm run check:hook` refuse toute commande citée sans `SKILL.md` et toute autorisation incohérente. L'ancien dossier disparaît chez le client à la mise à jour suivante.
 
 ## Les quatre niveaux de protection
 
@@ -102,7 +106,7 @@ npm run dev            # itérer en local
 npm run build          # produit dist/
 npm run check          # contrôles de contenu et de référencement
 npm run check:envers   # chaque contrôle détecte bien sa régression
-npm run check:hook     # le garde-fou refuse et autorise ce qu'il faut
+npm run check:hook     # garde-fou, noms des commandes, carte d'état
 npm run test:navigateur
 ```
 

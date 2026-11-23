@@ -12,4 +12,4 @@ Remet le site de test dans l'état du site en ligne. Le site en ligne n'est pas 
 
 Si le client ne veut annuler qu'**une partie** des modifications, n'utilise pas cette commande : corrige les fichiers concernés dans `src/`, puis `/voir`.
 
-Phrase d'état finale, par exemple : « Le site de test est revenu à l'identique du site en ligne. Rien n'a changé en ligne. »
+Termine par la carte d'état (CLAUDE.md). Par exemple : « Le site de test est revenu à l'identique du site en ligne. Rien n'a changé en ligne. »

@@ -7,6 +7,7 @@
       "Bash(npm run check)",
       "Bash(npm run dev)",
       "Bash(node scripts/outils/etat.mjs)",
+      "Bash(node scripts/outils/etat.mjs --carte)",
       "Bash(node scripts/outils/apercu.mjs *)",
       "Bash(node scripts/outils/prod.mjs *)",
       "Bash(node scripts/outils/annuler-modifs.mjs *)",

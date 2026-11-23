@@ -46,7 +46,7 @@ const donneesStructurees = {
     <script type="application/ld+json" set:html={JSON.stringify(donneesStructurees)} />
   </head>
   <body>
-    {estDev && <p class="bandeau-dev">Version de test : ce site n'est pas le site en ligne.</p>}
+    {estDev && <p class="bandeau-dev"><strong>🧪 Site de test</strong> · vos visiteurs ne voient pas cette version. Elle sera en ligne quand vous taperez /publier.</p>}
     <header class="entete">
       <a class="marque" href="/">{entreprise.nom}</a>
       <nav aria-label="Menu principal">
@@ -92,12 +92,16 @@ const donneesStructurees = {
     color: var(--couleur-accent);
   }
   .bandeau-dev {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     margin: 0;
-    padding: 0.4rem 1rem;
+    padding: 0.5rem 1rem;
     text-align: center;
     font-size: 0.9rem;
     background: #fff3cd;
     color: #5c4400;
+    border-bottom: 1px solid #f0d78c;
   }
   .entete,
   main,

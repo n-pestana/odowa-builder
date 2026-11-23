@@ -9,6 +9,9 @@ allowed-tools: Bash(node scripts/outils/jeton.mjs creer publier) Bash(node scrip
 
 Le client vient de taper `/publier`. La ligne ci-dessus doit dire « Autorisation du client enregistrée ». Si ce n'est pas le cas, arrête-toi et lance `/prevenir-nicolas`.
 
+Étapes à annoncer au client (CLAUDE.md, « Les attentes ») :
+`⏳ Préparation de la publication…` → `⏳ Contrôles automatiques (1 à 3 minutes)…` → *(question de confirmation)* → `⏳ Publication…` → `⏳ Vérification du site en ligne (1 à 3 minutes)…` → `✅ Votre site est en ligne et vérifié`.
+
 Suis ces étapes dans l'ordre. À chaque étape : code 1 = arrête-toi et suis le message ; code 3 = relance la même commande une minute plus tard.
 
 1. **Préparer.** Lance `node scripts/outils/prod.mjs preparer-publication`.
@@ -23,4 +26,4 @@ Suis ces étapes dans l'ordre. À chaque étape : code 1 = arrête-toi et suis l
    - Succès : donne l'adresse du site en ligne et demande au client d'y jeter un œil.
    - Échec : Nicolas est déjà alerté automatiquement. Demande au client d'ouvrir le site en ligne ; s'il est cassé, propose-lui de taper `/annuler-publication`.
 
-Phrase d'état finale, par exemple : « Le site en ligne est à jour et vérifié à 18 h 42. » ou « Rien n'a été mis en ligne : le contrôle des liens est rouge sur la page Contact. »
+Termine par la carte d'état (CLAUDE.md). Par exemple : « ✨ Votre site est en ligne et vérifié à 18 h 42. » ou « Rien n'a été mis en ligne : un lien est cassé sur la page Contact. Je peux le corriger. »

@@ -11,7 +11,7 @@
     "preview": "wrangler pages dev dist --port 8788",
     "check": "node scripts/controles/index.mjs",
     "check:envers": "node scripts/controles/test-a-l-envers.mjs",
-    "check:hook": "node scripts/controles/test-hook.mjs",
+    "check:hook": "node scripts/controles/test-hook.mjs && node scripts/controles/test-carte.mjs",
     "test:navigateur": "playwright test",
     "etat": "node scripts/outils/etat.mjs"
   },
