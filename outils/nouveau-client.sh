@@ -18,6 +18,9 @@
 
 set -uo pipefail
 USINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Pour les tests : USINE_CONFIG et USINE_SECRETS remplacent config.env et secrets.env.
+CONFIG="${USINE_CONFIG:-$USINE/config.env}"
+SECRETS="${USINE_SECRETS:-$USINE/secrets.env}"
 
 ID="${1:-}"; NOM="${2:-}"; DOMAINE="${3:-}"
 [[ $# -ge 3 ]] && shift 3 || shift $#
@@ -53,8 +56,8 @@ bilan() {
 
 # --- Configuration ---------------------------------------------------------------
 etape "Configuration"
-[[ -f "$USINE/config.env" ]] || { echo "   config.env absent : copier config.exemple.env en config.env et le remplir."; exit 1; }
-set -a; . "$USINE/config.env"; set +a
+[[ -f "$CONFIG" ]] || { echo "   config.env absent : copier config.exemple.env en config.env et le remplir."; exit 1; }
+set -a; . "$CONFIG"; set +a
 for V in PROPRIETAIRE LOGIN_NICOLAS CONTACT_SECOURS; do
   [[ -n "${!V:-}" ]] || { echo "   $V est vide dans config.env."; exit 1; }
 done
@@ -116,10 +119,15 @@ if [[ -n "$SIMULATION" ]]; then
   bilan; exit 0
 fi
 
-# --- 3. Secrets ------------------------------------------------------------------
+# --- 3. Prerequis : rien n'est cree tant qu'ils ne sont pas tous verts ------------
+etape "Prerequis (rien n'est encore cree)"
+OPTION_CF=(); [[ "$SANS_CF" -eq 1 ]] && OPTION_CF=(--sans-cloudflare)
+bash "$USINE/outils/prerequis.sh" "$ID" "${OPTION_CF[@]}" || fatal "prerequis rouges : rien n'a ete cree sur GitHub ni Cloudflare."
+fait "prerequis verts"
+
 etape "Secrets"
-[[ -f "$USINE/secrets.env" ]] || fatal "secrets.env absent : copier secrets.exemple.env en secrets.env et le remplir."
-set -a; . "$USINE/secrets.env"; set +a
+[[ -f "$SECRETS" ]] || fatal "secrets.env absent : copier secrets.exemple.env en secrets.env et le remplir."
+set -a; . "$SECRETS"; set +a
 [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]] || fatal "CLOUDFLARE_API_TOKEN est vide dans secrets.env."
 JETON_TEST="$(openssl rand -hex 24)"
 fait "secrets charges (aucune valeur n'est affichee)"

@@ -12,6 +12,7 @@ Trois parties : mettre en place l'usine (une fois), créer un client (une comman
 | Tests navigateur (20 tests, ordinateur et téléphone, formulaire en simulation) | Vérifié en local, avec un Chromium préinstallé |
 | Scripts des commandes du client | Vérifié sur un dépôt git local avec une **API GitHub simulée** |
 | `nouveau-client.sh` : préparation du site d'un client | Vérifié en simulation, build et contrôles compris |
+| `prerequis.sh` : arrêt avant toute création si un prérequis manque | Vérifié : 12 vérifications simulées (9 refus, 2 autorisations, aucun secret en argument), 3 sabotages détectés ; vert en réel pour `pilote` |
 | `mettre-a-jour-client.sh` : contenu du client préservé, gabarit réaligné | Vérifié en simulation (16 vérifications) |
 | `nouveau-client.sh` : création du dépôt, secrets, projet Cloudflare, premier push | **Non exécuté** |
 | `mettre-a-jour-client.sh` : clonage et envoi chez un vrai client | **Non exécuté** |
@@ -73,6 +74,7 @@ Pour répéter à blanc, sans rien créer en ligne : ajoute `--simulation /tmp/e
 |---|---|
 | Prépare le site | Copie `gabarit/`, remplit `site.config.json`, `CODEOWNERS`, le nom de l'entreprise |
 | Vérifie | Build et contrôles sur le site du client. Rouge = rien n'est créé. |
+| Vérifie les prérequis | `outils/prerequis.sh` : valeurs remplies et sans exemple, scope `workflow` de `gh`, assistant d'identification git, jeton Cloudflare sur Pages, nom du projet libre, expéditeur accepté par Resend (un mail de test part vers `EMAIL_TEST`). Rouge = rien n'est créé. Lançable seul : `bash outils/prerequis.sh IDENTIFIANT`. |
 | Crée le dépôt | `PROPRIETAIRE/site-IDENTIFIANT`, privé |
 | Pose les secrets GitHub | `CLOUDFLARE_API_TOKEN`, `CONTACT_JETON_TEST` (généré), et les variables `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_PROJET` |
 | Crée le projet Cloudflare Pages | `site-IDENTIFIANT`, branche de production `main` |

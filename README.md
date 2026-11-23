@@ -9,6 +9,7 @@ odowa-builder/                  ce dépôt (privé, Nicolas seul)
 │   ├── nouveau-client.sh       crée le dépôt, les réglages, les secrets et le projet Cloudflare d'un client
 │   ├── mettre-a-jour-client.sh pousse une nouvelle version du gabarit chez un client, ou chez tous
 │   ├── github.sh               réglages GitHub d'un dépôt client (appelé par nouveau-client.sh)
+│   ├── prerequis.sh            vérifie tout ce qui peut l'être avant de créer quoi que ce soit (appelé par nouveau-client.sh)
 │   ├── appliquer-gabarit.mjs   recopie le gabarit sans toucher au contenu du client
 │   └── test-simulation.sh      teste création et mise à jour sans rien toucher en ligne
 ├── clients/                    une fiche par client (aucun secret)
