@@ -19,7 +19,9 @@ Trois parties : mettre en place l'usine (une fois), créer un client (une comman
 | Pose des variables du projet Pages par l'API Cloudflare | **Non exécuté**. C'est l'appel le plus incertain de l'ensemble. |
 | Workflow « Gabarit » de l'usine sur GitHub | Vérifié : run 45151361297, jobs `gabarit` et `outils` verts du premier coup, Node v22.23.5, 20 tests navigateur passés après `playwright install --with-deps`, artefact `captures-…` avec 8 captures |
 | Workflows GitHub Actions des clients | **Non exécutés** |
-| Déploiement `wrangler pages deploy`, envoi réel d'un mail, captcha | **Non exécuté** |
+| Envoi d'un mail par l'API Resend depuis le domaine d'expédition | Vérifié : `POST /emails` depuis `no-reply@builder.odowa.com`, HTTP 200, mail reçu (tâche B). Depuis un domaine non validé : HTTP 403 `validation_error` |
+| Jeton Cloudflare : actif et accès aux projets Pages du compte | Vérifié en lecture (`/accounts/{id}/tokens/verify`, liste des projets) |
+| Déploiement `wrangler pages deploy`, envoi d'un mail par le formulaire déployé, captcha | **Non exécuté** |
 | Commandes et garde-fou dans une vraie session Claude Code | **Non exécuté** |
 | Appels `gh api` à travers le proxy GitHub d'une session cloud | **Non exécuté** |
 
@@ -41,8 +43,8 @@ Vérifie dans l'onglet Actions que le workflow **« Gabarit »** passe au vert. 
 
 ### Les comptes
 
-1. **Cloudflare** : note l'identifiant du compte. Crée un jeton d'API limité à « Cloudflare Pages : modification » sur ce compte.
-2. **Resend** : crée une clé d'API et valide **un** domaine d'expédition à toi. Tous les formulaires des clients expédieront depuis cette adresse, avec l'adresse du visiteur en « répondre à ». Tu n'as donc rien à valider client par client.
+1. **Cloudflare** : note l'identifiant du compte. Crée un jeton d'API personnalisé (aucun modèle) avec une seule permission : « Compte → Pages → Modifier » (« Pages Write »), sur ce compte, sans filtre d'adresse IP. Rien d'autre : ce jeton est copié dans le dépôt de chaque client.
+2. **Resend** : valide **un** domaine d'expédition à toi (l'offre gratuite n'en autorise qu'un, c'est suffisant), et mets une adresse de ce domaine dans `CONTACT_EXPEDITEUR`. Tous les formulaires des clients expédieront depuis cette adresse, avec l'adresse du visiteur en « répondre à ». Tu n'as donc rien à valider client par client. Crée une clé « Sending access » limitée à ce domaine : elle est posée dans le projet Pages de chaque client.
 3. **GitHub** : sur un dépôt privé, la protection de branche et CODEOWNERS demandent une offre payante. `outils/github.sh` te le dira explicitement à la première exécution. À trancher à ce moment-là : compte personnel Pro, ou organisation.
 
 ### Les deux fichiers de configuration

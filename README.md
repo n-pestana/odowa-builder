@@ -99,3 +99,15 @@ Jamais dans `config.env`, jamais dans une fiche de `clients/`, jamais dans `gaba
 ### 5. Une mise à jour peut être refusée par le contenu du client
 
 Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un client ne respecte pas, `mettre-a-jour-client.sh` s'arrête sans rien pousser et laisse le dossier pour examen. C'est le comportement voulu : on ne casse pas le site de test d'un client pour diffuser un contrôle.
+
+### 6. Le jeton Cloudflare est un jeton de compte
+
+- **Vécu** : `GET /user/tokens/verify` répondait `Invalid API Token` (code 1000) alors que le même jeton listait les projets Pages sans erreur.
+- **Cause** : le jeton a été créé comme jeton de compte (« Account API Token »), qui ne se vérifie pas sur l'adresse des jetons utilisateur.
+- **Réflexe** : vérifier par `GET /accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify`, puis par la liste des projets Pages. Ne jamais conclure qu'il est cassé sur la seule réponse de `/user/tokens/verify`.
+
+### 7. Un domaine d'expédition non validé ne se voit qu'à la première mise en prod
+
+- **Vécu** : `CONTACT_EXPEDITEUR` était sur `odowa.com`, absent du compte Resend. Un envoi de test a répondu `HTTP 403 {"message":"The odowa.com domain is not verified. ...","name":"validation_error"}`. Rien dans la création d'un client ne l'aurait signalé : seuls les formulaires des visiteurs et la vérification après mise en prod auraient échoué.
+- **Cause** : Resend n'accepte comme expéditeur qu'une adresse sur un domaine validé du compte, quelle que soit la portée de la clé (« All domains » veut dire tous les domaines validés). L'offre gratuite n'autorise qu'un domaine.
+- **Réflexe** : après tout changement de `CONTACT_EXPEDITEUR` ou de clé Resend, faire un envoi de test vers `EMAIL_TEST` par `POST https://api.resend.com/emails` et constater la réception.
