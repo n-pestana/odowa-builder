@@ -1,0 +1,25 @@
+{
+  "name": "gabarit-site-client",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler pages dev dist --port 8788",
+    "check": "node scripts/controles/index.mjs",
+    "check:envers": "node scripts/controles/test-a-l-envers.mjs",
+    "check:hook": "node scripts/controles/test-hook.mjs",
+    "test:navigateur": "playwright test",
+    "etat": "node scripts/outils/etat.mjs"
+  },
+  "devDependencies": {
+    "@astrojs/sitemap": "^3.7.6",
+    "@playwright/test": "^1.65.1",
+    "astro": "^7.4.13",
+    "node-html-parser": "^9.0.7",
+    "wrangler": "^4.166.0"
+  }
+}

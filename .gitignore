@@ -1,0 +1,10 @@
+# Jamais versionnes
+secrets.env
+config.env
+
+node_modules/
+dist/
+.astro/
+.wrangler/
+.rapports/
+test-results/

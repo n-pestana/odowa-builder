@@ -1,0 +1,64 @@
+name: Gabarit
+
+# Valide le gabarit et les outils à chaque modification de l'usine,
+# AVANT qu'ils n'arrivent chez un client. Aucun secret, aucun déploiement.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gabarit:
+    name: gabarit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gabarit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: gabarit/.nvmrc
+          cache: npm
+          cache-dependency-path: gabarit/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Construire le site (mode prod)
+        run: npm run build
+      - name: Contrôles de contenu et de référencement
+        run: npm run check
+      - name: Contrôles testés à l'envers
+        run: npm run check:envers
+      - name: Garde-fou testé dans les deux sens
+        run: npm run check:hook
+      - name: Installer le navigateur de test
+        run: npx playwright install --with-deps chromium
+      - name: Tests dans un navigateur
+        run: npm run test:navigateur
+      - name: Build en mode test (non indexable)
+        env:
+          PUBLIC_ENV: dev
+        run: npm run build && npm run check -- --mode=dev
+      - name: Conserver les captures d'écran
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-${{ github.sha }}
+          path: gabarit/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  outils:
+    name: outils
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: gabarit/.nvmrc
+      - name: Syntaxe des scripts
+        run: for f in outils/*.sh; do bash -n "$f"; done
+      - name: Création d'un client en simulation, puis mise à jour
+        run: bash outils/test-simulation.sh

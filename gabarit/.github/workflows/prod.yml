@@ -1,0 +1,59 @@
+name: Site en ligne
+
+# Chaque nouveau commit sur "main" (mise en prod ou retour en arrière) :
+# build -> dernier contrôle -> déploiement -> vérification du site réel -> alerte si échec.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: site-en-ligne
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  production:
+    name: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+      - name: Construire le site (mode prod)
+        env:
+          PUBLIC_ENV: prod
+          PUBLIC_VERSION: ${{ github.sha }}
+          PUBLIC_TURNSTILE_SITEKEY: ${{ vars.TURNSTILE_SITEKEY }}
+        run: npm run build
+
+      - name: Dernier contrôle avant déploiement
+        run: npm run check
+
+      - name: Déployer sur le site en ligne
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name="${{ vars.CLOUDFLARE_PROJET }}" --branch=main --commit-hash="${{ github.sha }}" --commit-dirty=true
+
+      - name: Vérifier le site en ligne (pages, version servie, formulaire)
+        env:
+          VERSION_ATTENDUE: ${{ github.sha }}
+          CONTACT_JETON_TEST: ${{ secrets.CONTACT_JETON_TEST }}
+        run: node scripts/controles/apres-deploiement.mjs
+
+      - name: Alerter Nicolas en cas d'échec
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          node scripts/outils/alerter.mjs --urgence prod-cassee
+          --message "Echec du deploiement ou de la verification du site en ligne (commit ${{ github.sha }}). Journal : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

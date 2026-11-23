@@ -1,0 +1,183 @@
+---
+// Gabarit commun a toutes les pages. Les pages Markdown passent leurs
+// informations par "frontmatter", les pages .astro par des proprietes.
+import entreprise from '../donnees/entreprise.json';
+
+const infos = Astro.props.frontmatter ?? Astro.props;
+const { title, description, indexable = true } = infos;
+
+const estDev = import.meta.env.PUBLIC_ENV === 'dev';
+const version = import.meta.env.PUBLIC_VERSION ?? 'local';
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+
+const donneesStructurees = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: entreprise.nom,
+  description: entreprise.activite,
+  url: Astro.site?.href,
+  telephone: entreprise.telephone,
+  email: entreprise.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: entreprise.adresse.rue,
+    postalCode: entreprise.adresse.codePostal,
+    addressLocality: entreprise.adresse.ville,
+    addressCountry: entreprise.adresse.pays,
+  },
+};
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {(estDev || !indexable) && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="version" content={version} />
+    <script type="application/ld+json" set:html={JSON.stringify(donneesStructurees)} />
+  </head>
+  <body>
+    {estDev && <p class="bandeau-dev">Version de test : ce site n'est pas le site en ligne.</p>}
+    <header class="entete">
+      <a class="marque" href="/">{entreprise.nom}</a>
+      <nav aria-label="Menu principal">
+        <ul>
+          {entreprise.menu.map((entree) => (
+            <li><a href={entree.lien}>{entree.titre}</a></li>
+          ))}
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="pied">
+      <p>
+        {entreprise.nom} · {entreprise.adresse.rue}, {entreprise.adresse.codePostal}{' '}
+        {entreprise.adresse.ville} · <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a>
+      </p>
+      <p><a href="/mentions-legales/">Mentions légales</a></p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --couleur-texte: #1c2430;
+    --couleur-fond: #ffffff;
+    --couleur-accent: #0b5cad;
+    --couleur-doux: #f2f5f9;
+    --largeur: 62rem;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--couleur-texte);
+    background: var(--couleur-fond);
+  }
+  a {
+    color: var(--couleur-accent);
+  }
+  .bandeau-dev {
+    margin: 0;
+    padding: 0.4rem 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    background: #fff3cd;
+    color: #5c4400;
+  }
+  .entete,
+  main,
+  .pied {
+    max-width: var(--largeur);
+    margin: 0 auto;
+    padding: 1rem 1.25rem;
+  }
+  .entete {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .marque {
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-decoration: none;
+    color: var(--couleur-texte);
+  }
+  .entete ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.2;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  .pied {
+    margin-top: 3rem;
+    border-top: 1px solid #dde3ea;
+    font-size: 0.9rem;
+  }
+  form {
+    display: grid;
+    gap: 1rem;
+    max-width: 34rem;
+  }
+  label {
+    display: grid;
+    gap: 0.3rem;
+    font-weight: 600;
+  }
+  input,
+  textarea {
+    padding: 0.6rem 0.7rem;
+    font: inherit;
+    border: 1px solid #b8c2cf;
+    border-radius: 6px;
+  }
+  button {
+    justify-self: start;
+    padding: 0.7rem 1.4rem;
+    font: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--couleur-accent);
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .piege {
+    position: absolute;
+    left: -9999px;
+  }
+  .message-formulaire {
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    background: var(--couleur-doux);
+  }
+  .message-formulaire[data-etat='erreur'] {
+    background: #fde8e8;
+  }
+</style>

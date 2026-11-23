@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm ci)",
+      "Bash(npm run build)",
+      "Bash(npm run check *)",
+      "Bash(npm run check)",
+      "Bash(npm run dev)",
+      "Bash(node scripts/outils/etat.mjs)",
+      "Bash(node scripts/outils/apercu.mjs *)",
+      "Bash(node scripts/outils/prod.mjs *)",
+      "Bash(node scripts/outils/annuler-modifs.mjs *)",
+      "Bash(node scripts/outils/annuler-modifs.mjs)",
+      "Bash(node scripts/outils/alerter.mjs *)",
+      "Bash(git status *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/outils/demarrage.mjs",
+            "timeout": 600
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/garde.mjs"
+          }
+        ]
+      }
+    ]
+  }
+}

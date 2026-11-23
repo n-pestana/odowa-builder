@@ -1,0 +1,11 @@
+# Tout appartient à Nicolas, SAUF le contenu du site.
+# Avec "Require review from Code Owners" sur main : une mise en prod qui ne touche que
+# src/ et public/ passe sans lui ; une mise en prod qui touche un garde-fou, un test ou
+# la configuration attend son accord.
+#
+# Remplacer @LOGIN-GITHUB-DE-NICOLAS (fait par outils/nouveau-client.sh du depot usine).
+
+*          @LOGIN-GITHUB-DE-NICOLAS
+
+/src/
+/public/

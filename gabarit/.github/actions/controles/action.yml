@@ -1,0 +1,49 @@
+name: Contrôles du site
+description: Build, contrôles de contenu, contrôles testés à l'envers, garde-fou, tests dans un navigateur.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+
+    - name: Installer les dépendances
+      shell: bash
+      run: npm ci --no-audit --no-fund
+
+    - name: Construire le site (mode prod)
+      shell: bash
+      env:
+        PUBLIC_ENV: prod
+      run: npm run build
+
+    - name: Contrôles de contenu et de référencement
+      shell: bash
+      run: npm run check
+
+    - name: Contrôles testés à l'envers
+      shell: bash
+      run: npm run check:envers
+
+    - name: Garde-fou testé dans les deux sens
+      shell: bash
+      run: npm run check:hook
+
+    - name: Installer le navigateur de test
+      shell: bash
+      run: npx playwright install --with-deps chromium
+
+    - name: Tests dans un navigateur (pages, menu, formulaire, mobile)
+      shell: bash
+      run: npm run test:navigateur
+
+    - name: Conserver les captures d'écran
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: captures-${{ github.sha }}
+        path: test-results/
+        if-no-files-found: ignore
+        retention-days: 14

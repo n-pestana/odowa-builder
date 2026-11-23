@@ -1,0 +1,12 @@
+{
+  "nomSite": "Exemple SARL",
+  "urlProd": "https://www.exemple.fr",
+  "urlDev": "https://dev.exemple-site.pages.dev",
+  "depot": "PROPRIETAIRE/NOM-DU-DEPOT",
+  "contactNicolas": "LOGIN-GITHUB-DE-NICOLAS",
+  "contactSecours": "Nicolas - E-MAIL - TELEPHONE",
+  "brancheDev": "dev",
+  "brancheProd": "main",
+  "formulaireContact": true,
+  "jetonProdObligatoire": true
+}

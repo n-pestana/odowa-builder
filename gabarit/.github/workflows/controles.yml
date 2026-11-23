@@ -1,0 +1,23 @@
+name: Contrôles avant mise en prod
+
+# Tourne sur chaque demande de mise en prod (ou de retour en arrière) vers "main".
+# Le résultat "controles" est OBLIGATOIRE pour fusionner (protection de branche).
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: controles-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  controles:
+    name: controles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/controles

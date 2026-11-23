@@ -1,0 +1,19 @@
+{
+  "nom": "Exemple SARL",
+  "activite": "Plomberie et chauffage",
+  "telephone": "+33 1 23 45 67 89",
+  "telephoneAffiche": "01 23 45 67 89",
+  "email": "contact@exemple.fr",
+  "adresse": {
+    "rue": "12 rue de la Mairie",
+    "codePostal": "60000",
+    "ville": "Beauvais",
+    "pays": "FR"
+  },
+  "horaires": "Du lundi au vendredi, de 8 h à 18 h",
+  "menu": [
+    { "titre": "Accueil", "lien": "/" },
+    { "titre": "Prestations", "lien": "/prestations/" },
+    { "titre": "Contact", "lien": "/contact/" }
+  ]
+}

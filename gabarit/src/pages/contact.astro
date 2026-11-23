@@ -1,0 +1,75 @@
+---
+import Base from '../layouts/Base.astro';
+import entreprise from '../donnees/entreprise.json';
+
+const cleCaptcha = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
+---
+
+<Base
+  title="Contact et devis gratuit | Exemple SARL"
+  description="Contactez Exemple SARL, plombier chauffagiste à Beauvais, pour un dépannage ou un devis gratuit. Réponse sous 48 heures par téléphone ou par e-mail."
+>
+  <h1>Nous contacter</h1>
+  <p>
+    Par téléphone au <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a>{' '}
+    ({entreprise.horaires.toLowerCase()}), ou avec ce formulaire.
+  </p>
+
+  <form id="formulaire-contact" action="/api/contact" method="post">
+    <label>
+      Votre nom
+      <input type="text" name="nom" autocomplete="name" required />
+    </label>
+    <label>
+      Votre e-mail
+      <input type="email" name="email" autocomplete="email" required />
+    </label>
+    <label>
+      Votre message
+      <textarea name="message" rows="6" required></textarea>
+    </label>
+    <label class="piege" aria-hidden="true">
+      Ne pas remplir ce champ
+      <input type="text" name="site_web" tabindex="-1" autocomplete="off" />
+    </label>
+    {cleCaptcha && <div class="cf-turnstile" data-sitekey={cleCaptcha} />}
+    <button type="submit">Envoyer</button>
+    <p class="message-formulaire" id="message-formulaire" role="status" hidden></p>
+  </form>
+  <noscript>
+    <p>Le formulaire a besoin de JavaScript. Vous pouvez aussi nous écrire à {entreprise.email}.</p>
+  </noscript>
+
+  {cleCaptcha && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
+
+  <script>
+    const formulaire = document.querySelector<HTMLFormElement>('#formulaire-contact');
+    const message = document.querySelector<HTMLElement>('#message-formulaire');
+
+    formulaire?.addEventListener('submit', async (evenement) => {
+      evenement.preventDefault();
+      if (!formulaire || !message) return;
+      const bouton = formulaire.querySelector('button');
+      bouton?.setAttribute('disabled', '');
+      let reussi = false;
+      try {
+        const reponse = await fetch(formulaire.action, {
+          method: 'POST',
+          body: new FormData(formulaire),
+          headers: { Accept: 'application/json' },
+        });
+        const resultat = await reponse.json().catch(() => ({}));
+        reussi = reponse.ok && resultat.ok === true;
+      } catch {
+        reussi = false;
+      }
+      message.hidden = false;
+      message.dataset.etat = reussi ? 'succes' : 'erreur';
+      message.textContent = reussi
+        ? 'Merci, votre message est bien parti. Nous vous répondons sous 48 heures.'
+        : "Le message n'a pas pu être envoyé. Merci de nous appeler ou de réessayer plus tard.";
+      if (reussi) formulaire.reset();
+      bouton?.removeAttribute('disabled');
+    });
+  </script>
+</Base>
