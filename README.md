@@ -112,3 +112,9 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
 - **Vécu** : `CONTACT_EXPEDITEUR` était sur `odowa.com`, absent du compte Resend. Un envoi de test a répondu `HTTP 403 {"message":"The odowa.com domain is not verified. ...","name":"validation_error"}`. Rien dans la création d'un client ne l'aurait signalé : seuls les formulaires des visiteurs et la vérification après mise en prod auraient échoué.
 - **Cause** : Resend n'accepte comme expéditeur qu'une adresse sur un domaine validé du compte, quelle que soit la portée de la clé (« All domains » veut dire tous les domaines validés). L'offre gratuite n'autorise qu'un domaine.
 - **Réflexe** : après tout changement de `CONTACT_EXPEDITEUR` ou de clé Resend, faire un envoi de test vers `EMAIL_TEST` par `POST https://api.resend.com/emails` et constater la réception.
+
+### 8. Le premier déploiement juste après la création du projet Pages peut échouer
+
+- **Vécu** (pilote) : le premier déploiement du site de test a échoué sur `A request to the Cloudflare API (/accounts/…/pages/projects/site-pilote) failed. Internal authentication error: internal server error [code: 10500]`, une vingtaine de secondes après la création du projet. Le site en ligne, déployé à la même seconde avec le même jeton, est passé. La relance du job a réussi sans rien changer.
+- **Cause** : non établie. Hypothèse : erreur passagère de Cloudflare dans la minute qui suit la création d'un projet. Un seul cas observé.
+- **Réflexe** : après une création, vérifier les deux premiers runs (`gh run list --repo DEPOT`). Sur l'erreur 10500, relancer le job : `gh run rerun RUN --repo DEPOT --failed`. Si elle revient sur un autre client, envisager une relance automatique dans `nouveau-client.sh`.

@@ -14,15 +14,18 @@ Trois parties : mettre en place l'usine (une fois), créer un client (une comman
 | `nouveau-client.sh` : préparation du site d'un client | Vérifié en simulation, build et contrôles compris |
 | `prerequis.sh` : arrêt avant toute création si un prérequis manque | Vérifié : 12 vérifications simulées (9 refus, 2 autorisations, aucun secret en argument), 3 sabotages détectés ; vert en réel pour `pilote` |
 | `mettre-a-jour-client.sh` : contenu du client préservé, gabarit réaligné | Vérifié en simulation (16 vérifications) |
-| `nouveau-client.sh` : création du dépôt, secrets, projet Cloudflare, premier push | **Non exécuté** |
+| `nouveau-client.sh` : création du dépôt, secrets, projet Cloudflare, premier push | Vérifié sur le pilote (`n-pestana/site-pilote`) : dépôt privé, secrets et variables GitHub, projet Pages, push HTTPS de `main` et `dev` workflows compris |
+| Protection de `main` (contrôle obligatoire, CODEOWNERS) sur un dépôt privé | **Refusée par GitHub en offre gratuite** : `Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)`. Décision en attente |
 | `mettre-a-jour-client.sh` : clonage et envoi chez un vrai client | **Non exécuté** |
-| `outils/github.sh` | **Non exécuté**, syntaxe vérifiée |
-| Pose des variables du projet Pages par l'API Cloudflare | **Non exécuté**. C'est l'appel le plus incertain de l'ensemble. |
+| `outils/github.sh` | Exécuté sur le pilote : réglages généraux et étiquettes faits, protection de `main` refusée (ligne ci-dessus) |
+| Pose des variables du projet Pages par l'API Cloudflare | Vérifié sur le pilote : `GET` du projet, variables présentes en production et sur le site de test, secrets présents |
 | Workflow « Gabarit » de l'usine sur GitHub | Vérifié : run 45151361297, jobs `gabarit` et `outils` verts du premier coup, Node v22.23.5, 20 tests navigateur passés après `playwright install --with-deps`, artefact `captures-…` avec 8 captures |
-| Workflows GitHub Actions des clients | **Non exécutés** |
+| Workflow « Site en ligne » d'un client, premier push | Vérifié sur le pilote (run 45224381379) : déploiement, puis `apres-deploiement.mjs` 10 verts, formulaire compris (mail accepté par Resend) |
+| Workflow « Site de test » d'un client, premier push | Vérifié sur le pilote (run 45224381349), **après une relance** : la 1re tentative a échoué sur une erreur Cloudflare 10500 (README de l'usine, piège 8). Bandeau « Version de test », `noindex, nofollow`, `X-Robots-Tag: noindex` et `Disallow: /` constatés |
+| Workflows « Contrôles » et « Site en ligne » d'une mise en prod, retour en arrière | **Non exécutés** |
 | Envoi d'un mail par l'API Resend depuis le domaine d'expédition | Vérifié : `POST /emails` depuis `no-reply@builder.odowa.com`, HTTP 200, mail reçu (tâche B). Depuis un domaine non validé : HTTP 403 `validation_error` |
 | Jeton Cloudflare : actif et accès aux projets Pages du compte | Vérifié en lecture (`/accounts/{id}/tokens/verify`, liste des projets) |
-| Déploiement `wrangler pages deploy`, envoi d'un mail par le formulaire déployé, captcha | **Non exécuté** |
+| Captcha Turnstile sur le site déployé | **Non testé** |
 | Commandes et garde-fou dans une vraie session Claude Code | **Non exécuté** |
 | Appels `gh api` à travers le proxy GitHub d'une session cloud | **Non exécuté** |
 

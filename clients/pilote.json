@@ -1,0 +1,11 @@
+{
+  "identifiant": "pilote",
+  "nom": "Site Pilote",
+  "domaine": "site-pilote.pages.dev",
+  "depot": "n-pestana/site-pilote",
+  "projetCloudflare": "site-pilote",
+  "urlDev": "https://dev.site-pilote.pages.dev",
+  "clientGithub": null,
+  "creeLe": "2026-11-23",
+  "versionGabarit": "051a7aa"
+}
