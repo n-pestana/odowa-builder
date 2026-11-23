@@ -17,7 +17,8 @@ Trois parties : mettre en place l'usine (une fois), créer un client (une comman
 | `mettre-a-jour-client.sh` : clonage et envoi chez un vrai client | **Non exécuté** |
 | `outils/github.sh` | **Non exécuté**, syntaxe vérifiée |
 | Pose des variables du projet Pages par l'API Cloudflare | **Non exécuté**. C'est l'appel le plus incertain de l'ensemble. |
-| Workflows GitHub Actions (usine et clients) | **Non exécutés** |
+| Workflow « Gabarit » de l'usine sur GitHub | Vérifié : run 45151361297, jobs `gabarit` et `outils` verts du premier coup, Node v22.23.5, 20 tests navigateur passés après `playwright install --with-deps`, artefact `captures-…` avec 8 captures |
+| Workflows GitHub Actions des clients | **Non exécutés** |
 | Déploiement `wrangler pages deploy`, envoi réel d'un mail, captcha | **Non exécuté** |
 | Commandes et garde-fou dans une vraie session Claude Code | **Non exécuté** |
 | Appels `gh api` à travers le proxy GitHub d'une session cloud | **Non exécuté** |

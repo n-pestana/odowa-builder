@@ -49,6 +49,12 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 
 - Pour un projet Pages, un `wrangler.toml` devient la source de vérité de la configuration et prend le pas sur les variables réglées dans le tableau de bord Cloudflare. Les variables du formulaire sont volontairement gérées dans Cloudflare, pas dans le dépôt.
 
+### 9. `nvm use` peut choisir un Node 22 trop ancien
+
+- **Vécu** : `.nvmrc` dit `22`, mais Astro exige au moins 22.23.4. Sur une machine où le Node 22 le plus récent installé était 22.19.0, `nvm use` l'a sélectionné et `npm run build` a échoué : `Node.js v22.19.0 is not supported by Astro! Please upgrade Node.js to a supported version: ">=22.23.4"`. `npm ci`, lui, ne fait qu'avertir.
+- **Cause** : `nvm use` prend la plus récente des versions 22 **déjà installées**, sans en télécharger. Sur GitHub, `setup-node` résout `22` vers la dernière 22.x publiée (v22.23.5 constatée), donc le CI n'est pas touché.
+- **Réflexe** : en cas d'erreur de version, `nvm install 22` (télécharge la dernière 22.x), puis `nvm use`.
+
 ## Les commandes
 
 | Commande client | Script | Touche le site en ligne |
