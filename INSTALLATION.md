@@ -15,19 +15,25 @@ Trois parties : mettre en place l'usine (une fois), créer un client (une comman
 | `prerequis.sh` : arrêt avant toute création si un prérequis manque | Vérifié : 12 vérifications simulées (9 refus, 2 autorisations, aucun secret en argument), 3 sabotages détectés ; vert en réel pour `pilote` |
 | `mettre-a-jour-client.sh` : contenu du client préservé, gabarit réaligné | Vérifié en simulation (16 vérifications) |
 | `nouveau-client.sh` : création du dépôt, secrets, projet Cloudflare, premier push | Vérifié sur le pilote (`n-pestana/site-pilote`) : dépôt privé, secrets et variables GitHub, projet Pages, push HTTPS de `main` et `dev` workflows compris |
-| Protection de `main` (contrôle obligatoire, CODEOWNERS) sur un dépôt privé | Refusée en offre gratuite (`Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)`). **Posée après passage du compte en GitHub Pro** et relue par l'API : contrôle `controles` obligatoire, accord du propriétaire du code, ni push forcé ni suppression, CODEOWNERS sans erreur. Son effet sur un compte client (refus réel) : **non testé**, voir tests pilotes 6 et 12 |
+| Protection de `main` (contrôle obligatoire, CODEOWNERS) sur un dépôt privé | Refusée en offre gratuite (`Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)`). **Posée après passage du compte en GitHub Pro** et relue par l'API : contrôle `controles` obligatoire, accord du propriétaire du code, ni push forcé ni suppression, CODEOWNERS sans erreur. Effet sur un compte client non administrateur : une demande qui ne touche que `src/` est fusionnée sans approbation (vérifié, demande #7 du pilote, `mergeable_state: clean`) ; une demande qui touche `scripts/` doit attendre l'approbation : **non testé** (test pilote 12) |
 | `mettre-a-jour-client.sh` : clonage et envoi chez un vrai client | **Non exécuté** |
 | `outils/github.sh` | Vérifié sur le pilote : `TERMINE - tous les reglages sont en place.` (après passage en Pro), relancé sans dommage |
 | Pose des variables du projet Pages par l'API Cloudflare | Vérifié sur le pilote : `GET` du projet, variables présentes en production et sur le site de test, secrets présents |
 | Workflow « Gabarit » de l'usine sur GitHub | Vérifié : run 45151361297, jobs `gabarit` et `outils` verts du premier coup, Node v22.23.5, 20 tests navigateur passés après `playwright install --with-deps`, artefact `captures-…` avec 8 captures |
 | Workflow « Site en ligne » d'un client, premier push | Vérifié sur le pilote (run 45224381379) : déploiement, puis `apres-deploiement.mjs` 10 verts, formulaire compris (mail accepté par Resend) |
 | Workflow « Site de test » d'un client, premier push | Vérifié sur le pilote (run 45224381349), **après une relance** : la 1re tentative a échoué sur une erreur Cloudflare 10500 (README de l'usine, piège 8). Bandeau « Version de test », `noindex, nofollow`, `X-Robots-Tag: noindex` et `Disallow: /` constatés |
-| Workflows « Contrôles » et « Site en ligne » d'une mise en prod, retour en arrière | **Non exécutés** |
+| Workflows « Contrôles » et « Site en ligne » d'une mise en prod, retour en arrière | Vérifiés sur le pilote : demandes #2, #3, #6, #7, contrôles verts, déploiement, `apres-deploiement.mjs` 10 verts à chaque fois |
+| Alerte automatique quand la vérification après déploiement échoue | Vérifié (tâche D7) : faux `CONTACT_JETON_TEST` → `Formulaire de contact - code 403 captcha` → ticket #8 `prod-cassee` créé par `github-actions[bot]`. Jeton régénéré et reposé (GitHub et Cloudflare), vérification revenue au vert |
+| Mail de notification GitHub pour un ticket d'alerte | **Rouge** : notification reçue, mail non reçu, y compris pour le ticket #8 créé par le bot. Réglages de notification de `n-pestana` à vérifier |
 | Envoi d'un mail par l'API Resend depuis le domaine d'expédition | Vérifié : `POST /emails` depuis `no-reply@builder.odowa.com`, HTTP 200, mail reçu (tâche B). Depuis un domaine non validé : HTTP 403 `validation_error` |
 | Jeton Cloudflare : actif et accès aux projets Pages du compte | Vérifié en lecture (`/accounts/{id}/tokens/verify`, liste des projets) |
 | Captcha Turnstile sur le site déployé | **Non testé** |
-| Commandes et garde-fou dans une vraie session Claude Code | **Non exécuté** |
-| Appels `gh api` à travers le proxy GitHub d'une session cloud | **Non exécuté** |
+| Commandes et garde-fou dans une vraie session Claude Code | Vérifié dans une session cloud (application Claude, compte `n-pestana`) : tests pilotes 1 à 8, 10, 11. Les commandes du dépôt fonctionnent tapées en entier mais n'apparaissent pas dans le menu `/` de l'application. Le hook `garde.mjs` refuse réellement (`git push --dry-run origin HEAD:main` → « REFUSE par le garde-fou du site ») |
+| Autorisation de mise en prod (ligne `!` de la commande) dans une session cloud | Vérifié : `prod.mjs` exige le jeton avant tout, et les mises en prod tapées ont abouti |
+| Appels `gh api` à travers le proxy GitHub d'une session cloud | Vérifié : création de demandes, fusion, tickets depuis la session cloud |
+| La session cloud travaille sur `dev` (test pilote 13) | **Rouge** : la session démarre sur une branche `claude/…` imposée par l'environnement cloud. `apercu.mjs` pousse quand même vers `dev` ; la consigne de `gabarit/CLAUDE.md` est à corriger |
+| Site de test publié même si un contrôle est rouge | **Rouge** : l'étape « Vérifier que le site de test n'est pas indexable » de `dev.yml` lance tous les contrôles ; un lien cassé empêche la publication (run 45238977506). À corriger |
+| Mise en route d'un client : liaison de son compte GitHub à Claude | **Non testé** avec un compte client (seulement avec `n-pestana`). L'application GitHub de Claude doit être installée par le propriétaire des dépôts (README de l'usine, piège 9) |
 
 ## 1. Mettre en place l'usine (une seule fois)
 
@@ -91,7 +97,7 @@ Pour répéter à blanc, sans rien créer en ligne : ajoute `--simulation /tmp/e
 1. **Le contenu** : remplacer les pages d'exemple. Le plus simple est de le faire avec Claude Code dans un clone du dépôt du client, puis `/apercu`.
 2. **Le domaine** : le brancher sur le projet Pages (DNS).
 3. **Le compte GitHub du client** : le créer avec lui, à son nom, avec son e-mail, double authentification sur son téléphone. Puis `bash outils/github.sh DEPOT LOGIN`. Rôle « écriture », jamais administrateur : une session Claude agit avec les droits du compte connecté.
-4. **Son accès Claude** : abonnement, connexion de son compte GitHub dans claude.ai/code, application GitHub de Claude installée sur son seul dépôt. L'environnement cloud par défaut suffit.
+4. **Son accès Claude** : abonnement, connexion de son compte GitHub dans claude.ai/code. **Toi**, ajoute son dépôt à l'application GitHub de Claude installée sur ton compte (github.com/settings/installations → Claude → Configure → Only select repositories) : le client ne peut pas le faire, le dépôt t'appartient. L'environnement cloud par défaut suffit. Il ouvre une session **cloud**, pas une session locale, et tape les commandes en entier (`/aide`) : elles n'apparaissent pas dans le menu `/` de l'application.
 5. **La prise en main** : lui remettre `GUIDE-CLIENT.md` et faire avec lui une première modification de bout en bout.
 6. **Facultatif** : Cloudflare Access sur le site de test si tu y branches un domaine. Il porte déjà `noindex` et un `robots.txt` bloquant.
 

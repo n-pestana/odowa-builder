@@ -186,7 +186,7 @@ JS
   rm -f "$CORPS"
   [[ -z "${RESEND_API_KEY:-}" ]] && manuel "RESEND_API_KEY est vide dans secrets.env : le formulaire ne pourra pas envoyer de mail"
   [[ -z "${CONTACT_EXPEDITEUR:-}" ]] && manuel "CONTACT_EXPEDITEUR est vide dans config.env : le formulaire ne pourra pas envoyer de mail"
-  manuel "Brancher le domaine $DOMAINE sur le projet Pages $PROJET (DNS)"
+  [[ "$DOMAINE" == *.pages.dev ]] || manuel "Brancher le domaine $DOMAINE sur le projet Pages $PROJET (DNS)"
 fi
 [[ -z "$EMAIL_CLIENT" ]] && manuel "Aucun --email-client : les messages du formulaire en ligne arrivent chez toi. Mettre CONTACT_EMAIL a l'adresse du client dans Cloudflare (Production)"
 
@@ -220,6 +220,7 @@ fait "client inscrit dans clients/$ID.json (a committer dans l'usine)"
 
 manuel "Suivre les premiers deploiements : gh run list --repo $DEPOT"
 manuel "Proteger le site de test par Cloudflare Access si tu y branches un domaine"
+manuel "Ajouter $DEPOT a l'application GitHub de Claude : github.com/settings/installations -> Claude -> Configure (le client ne peut pas le faire)"
 manuel "Cote client : abonnement Claude, connexion de son compte GitHub dans claude.ai/code, remise de GUIDE-CLIENT.md"
 
 bilan

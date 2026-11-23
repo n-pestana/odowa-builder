@@ -5,7 +5,7 @@
   "depot": "n-pestana/site-pilote",
   "projetCloudflare": "site-pilote",
   "urlDev": "https://dev.site-pilote.pages.dev",
-  "clientGithub": null,
+  "clientGithub": "nicolaspestana-ai",
   "creeLe": "2026-11-23",
   "versionGabarit": "051a7aa"
 }

@@ -118,3 +118,20 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
 - **Vécu** (pilote) : le premier déploiement du site de test a échoué sur `A request to the Cloudflare API (/accounts/…/pages/projects/site-pilote) failed. Internal authentication error: internal server error [code: 10500]`, une vingtaine de secondes après la création du projet. Le site en ligne, déployé à la même seconde avec le même jeton, est passé. La relance du job a réussi sans rien changer.
 - **Cause** : non établie. Hypothèse : erreur passagère de Cloudflare dans la minute qui suit la création d'un projet. Un seul cas observé.
 - **Réflexe** : après une création, vérifier les deux premiers runs (`gh run list --repo DEPOT`). Sur l'erreur 10500, relancer le job : `gh run rerun RUN --repo DEPOT --failed`. Si elle revient sur un autre client, envisager une relance automatique dans `nouveau-client.sh`.
+
+### 9. L'application GitHub de Claude est installée par toi, pas par le client
+
+- **Vécu** (pilote) : `site-pilote` n'apparaissait pas dans l'application Claude. Dans GitHub, Settings → Applications ne montrait Claude que dans « Authorized GitHub Apps » (bouton Revoke, pas de Configure) : le compte avait autorisé Claude, mais l'application n'était installée sur aucun dépôt.
+- **Cause** : seul le propriétaire d'un compte installe une application sur ses dépôts. Les dépôts clients sont à toi ; le client, collaborateur en écriture, ne peut pas le faire.
+- **Réflexe** : installer une fois l'application Claude sur ton compte en « Only select repositories » (jamais « All repositories » : l'usine serait visible), puis ajouter chaque nouveau dépôt client. `nouveau-client.sh` le rappelle dans son bilan. Ne jamais cliquer « Revoke » sur l'autorisation.
+
+### 10. Les alertes passent par les notifications GitHub, pas par un mail de l'usine
+
+- **Vécu** (pilote) : tickets d'alerte créés et notification reçue, mais aucun mail, même pour le ticket #8 créé par `github-actions[bot]`.
+- **Cause** : `alerter.mjs` crée un ticket qui mentionne et assigne `contactNicolas` ; le mail dépend entièrement des réglages de notification de ce compte GitHub. En plus, GitHub n'envoie pas de mail pour ses propres actions : un ticket créé depuis une session reliée à `n-pestana` ne le prévient pas par mail.
+- **Réflexe** : github.com/settings/notifications → « Default notification email » et case Email de « Participating, @mentions and custom ». Valider avec un ticket créé par un autre compte. **Non résolu à ce jour.**
+
+### 11. Un faux jeton de test sans captcha enverrait un vrai message au client
+
+- **Constat** (lecture de `gabarit/functions/api/contact.js`, tâche D7) : si `CONTACT_JETON_TEST` diffère entre GitHub et Cloudflare, la requête de test n'est pas reconnue comme un test. Avec Turnstile, elle est refusée (`403 captcha`) : c'est ce qui s'est passé sur le pilote. **Sans** `TURNSTILE_SECRET`, elle partirait comme un vrai message vers `CONTACT_EMAIL`, chez le client.
+- **Réflexe** : le jeton se change toujours aux deux endroits à la fois ; il n'est conservé nulle part ailleurs, on en régénère un (`openssl rand -hex 24`). Cloudflare ne l'applique qu'au déploiement suivant : relancer le dernier run « Site en ligne ».
