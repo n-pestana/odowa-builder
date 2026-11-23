@@ -32,7 +32,9 @@ jobs:
           PUBLIC_TURNSTILE_SITEKEY: ${{ vars.TURNSTILE_SITEKEY }}
         run: npm run build
       - name: Vérifier que le site de test n'est pas indexable
-        run: npm run check -- --mode=dev
+        # Seulement le non-référencement : un autre contrôle rouge ne doit pas empêcher le
+        # client de voir son site de test. Le job "controles" lance tout, et bloque la mise en prod.
+        run: npm run check -- --mode=dev --seulement=indexation,robots
       - name: Publier sur le site de test
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -3,7 +3,7 @@
 // on verifie que le controle echoue en nommant la bonne page, puis on jette la copie.
 // Usage : npm run build && npm run check:envers
 
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -139,8 +139,56 @@ const devDetecte = enDev.problemes.some((p) => p.controle === 'indexation') && e
 console.log(`${devDetecte ? 'DETECTE    ' : 'NON DETECTE'} - build de prod controle en mode dev -> [indexation] + [robots]`);
 if (!devDetecte) rates += 1;
 
+// Publication du site de test (dev.yml) : seuls [indexation] et [robots] bloquent.
+// Autorise : un lien casse ne doit PAS empecher le client de voir son site de test.
+// Refuse : un site de test sans noindex doit TOUJOURS etre bloque.
+const PUBLICATION = ['indexation', 'robots'];
+function copieDeSiteDeTest() {
+  const copie = mkdtempSync(join(tmpdir(), 'envers-'));
+  cpSync(DIST, copie, { recursive: true });
+  for (const f of readdirSync(copie, { recursive: true }).filter((f) => String(f).endsWith('.html'))) {
+    modifier(copie, String(f), (h) => h.replace(/<meta name="robots"[^>]*>/g, '').replace('</head>', '<meta name="robots" content="noindex, nofollow"></head>'));
+  }
+  writeFileSync(join(copie, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
+  return copie;
+}
+const casPublication = [
+  {
+    nom: 'site de test avec un lien casse : publication autorisee',
+    preparer: (d) => modifier(d, 'index.html', (h) => h.replace('</main>', '<a href="/page-inexistante/">x</a></main>')),
+    conforme: (filtres, complets) => filtres.length === 0 && complets.some((p) => p.controle === 'liens'),
+  },
+  {
+    nom: 'site de test sans noindex sur une page : publication refusee',
+    preparer: (d) => modifier(d, 'prestations/index.html', (h) => h.replace(/<meta name="robots"[^>]*>/g, '')),
+    conforme: (filtres) => filtres.some((p) => p.controle === 'indexation' && p.page.includes('/prestations/')),
+  },
+  {
+    nom: 'site de test dont le robots.txt laisse indexer : publication refusee',
+    preparer: (d) => writeFileSync(join(d, 'robots.txt'), 'User-agent: *\nAllow: /\n'),
+    conforme: (filtres) => filtres.some((p) => p.controle === 'robots'),
+  },
+];
+for (const cas of casPublication) {
+  let copie;
+  try {
+    copie = copieDeSiteDeTest();
+    cas.preparer(copie);
+    const filtres = controler({ dossier: copie, urlProd: config.urlProd, mode: 'dev', seulement: PUBLICATION }).problemes;
+    const complets = controler({ dossier: copie, urlProd: config.urlProd, mode: 'dev' }).problemes;
+    const ok = cas.conforme(filtres, complets);
+    console.log(`${ok ? 'CONFORME   ' : 'NON CONFORME'} - ${cas.nom}`);
+    if (!ok) rates += 1;
+  } catch (erreur) {
+    console.log(`ERREUR      - ${cas.nom} : ${erreur.message}`);
+    rates += 1;
+  } finally {
+    if (copie) rmSync(copie, { recursive: true, force: true });
+  }
+}
+
 if (rates > 0) {
   console.log(`\nROUGE - ${rates} regression(s) non detectee(s) : les controles concernes ne protegent rien.`);
   process.exit(1);
 }
-console.log(`\nVERT - ${sabotages.length + 1} regressions injectees, toutes detectees.`);
+console.log(`\nVERT - ${sabotages.length + 1} regressions injectees, toutes detectees ; ${casPublication.length} cas de publication du site de test conformes.`);

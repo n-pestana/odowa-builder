@@ -25,7 +25,7 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 ### 3. Un contrôle vert ne prouve pas que la page est belle
 
 - **Vécu sur ce gabarit** : les contrôles et les tests navigateur étaient verts alors qu'il manquait une espace entre le téléphone et les horaires, et entre le code postal et la ville. Seule la capture d'écran l'a montré.
-- **Réflexe** : après un changement visuel, regarder la capture (artefact `captures-…` de la CI) ou le site de test, sur ordinateur et sur téléphone.
+- **Réflexe (maintenance)** : après un changement visuel, regarder la capture (artefact `captures-…` de la CI) ou le site de test, sur ordinateur et sur téléphone. Dans une session client, Claude ne fait pas de capture : il donne l'adresse et c'est le client qui regarde (`CLAUDE.md`).
 - **Cause technique à connaître** : dans un fichier `.astro`, un retour à la ligne entre une balise et une expression `{…}` ne produit pas d'espace. Écrire `{' '}` quand il en faut une.
 
 ### 4. Un contrôle non testé à l'envers ne vaut rien
@@ -54,6 +54,18 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 - **Vécu** : `.nvmrc` dit `22`, mais Astro exige au moins 22.23.4. Sur une machine où le Node 22 le plus récent installé était 22.19.0, `nvm use` l'a sélectionné et `npm run build` a échoué : `Node.js v22.19.0 is not supported by Astro! Please upgrade Node.js to a supported version: ">=22.23.4"`. `npm ci`, lui, ne fait qu'avertir.
 - **Cause** : `nvm use` prend la plus récente des versions 22 **déjà installées**, sans en télécharger. Sur GitHub, `setup-node` résout `22` vers la dernière 22.x publiée (v22.23.5 constatée), donc le CI n'est pas touché.
 - **Réflexe** : en cas d'erreur de version, `nvm install 22` (télécharge la dernière 22.x), puis `nvm use`.
+
+### 9. Une session cloud travaille sur une branche `claude/…`, pas sur `dev`
+
+- **Vécu** (pilote, session cloud) : la session démarre sur `claude/zen-planck-tlrxet`, avec la consigne de l'environnement cloud d'y travailler. L'ancienne règle « toujours sur `dev` » la contredisait ; Claude l'a signalé au lieu d'agir.
+- **Pourquoi ça marche quand même** : `apercu.mjs` enregistre sur la branche courante, se recale sur `origin/dev` et pousse `HEAD:refs/heads/dev`. `prod.mjs` ne regarde que `origin/dev`. La branche `claude/…` n'a pas été poussée sur GitHub.
+- **Réflexe** : ne pas forcer un passage sur `dev` au démarrage (ce serait contredire l'environnement cloud). `CLAUDE.md` dit de rester sur la branche de départ, `dev` ou `claude/…`, et seule `main` est refusée.
+
+### 10. Un contrôle rouge ne doit pas empêcher de publier le site de test
+
+- **Vécu** (pilote, test 7) : un lien cassé faisait échouer l'étape « Vérifier que le site de test n'est pas indexable » de `dev.yml`, qui lançait tous les contrôles. La publication était sautée : le client était envoyé voir un site de test qui n'avait pas changé.
+- **Cause** : l'étape lançait `npm run check -- --mode=dev` au complet.
+- **Réflexe** : elle lance `--seulement=indexation,robots`. Les autres contrôles tournent dans le job `controles` et bloquent la mise en prod. `check:envers` le vérifie dans les deux sens (lien cassé : publication autorisée ; `noindex` ou `robots.txt` manquant : refusée).
 
 ## Les commandes
 

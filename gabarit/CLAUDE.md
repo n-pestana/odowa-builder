@@ -18,7 +18,7 @@ Le client **n'est pas technicien**. Il veut modifier son site et le mettre en li
 | Site de test | voir `urlDev` dans `site.config.json` | Toi, à chaque `/apercu` |
 | Site en ligne | voir `urlProd` dans `site.config.json` | Uniquement `/mise-en-prod` et `/retour-en-arriere`, tapées par le client |
 
-Tu travailles **toujours sur la branche `dev`**, directement. Ne crée pas d'autre branche, ne propose pas de pull request : les commandes s'en chargent.
+**La branche de travail.** Reste sur la branche où la session a démarré : `dev`, ou une branche `claude/…` si la session cloud l'impose. Les deux conviennent : `/apercu` envoie toujours sur le site de test, quel que soit le nom de la branche. Ne change pas de branche, n'en crée pas d'autre, ne propose jamais de pull request, n'en parle pas au client : les commandes s'en chargent. Seule `main` est interdite.
 
 ## Règles non négociables
 
@@ -44,7 +44,7 @@ Un garde-fou automatique refuse les actions interdites. S'il te refuse quelque c
 1. Modifier dans `src/` ou `public/`.
 2. `npm run build` puis `npm run check` : les contrôles doivent être **VERT**. Un rouge se corrige tout de suite, à la source.
 3. `/apercu` : envoie sur le site de test et donne l'adresse au client.
-4. Le client regarde le site de test. Pour tout changement visuel, **demande-lui de regarder** la page concernée, sur ordinateur et sur téléphone : un contrôle peut être vert sur une page visuellement cassée.
+4. Le client regarde le site de test. Donne-lui **l'adresse** et la liste des pages à regarder, sans faire toi-même de capture d'écran : c'est lui qui regarde, et une capture ralentit tout. Pour tout changement visuel, **demande-lui de regarder** la page concernée, sur ordinateur et sur téléphone : un contrôle peut être vert sur une page visuellement cassée.
 5. Quand il est satisfait, **il** tape `/mise-en-prod`.
 
 ## Référencement (SEO)

@@ -1,6 +1,9 @@
 // Controles automatiques du site construit (dossier dist/).
 // Usage : npm run check            (mode prod, le defaut)
 //         npm run check -- --mode=dev
+//         npm run check -- --mode=dev --seulement=indexation,robots
+//           (publication du site de test : seul le non-referencement bloque ; les autres
+//            controles tournent en parallele dans le job "controles" et bloquent la mise en prod)
 // Sortie : une ligne par probleme, avec la page et la cause. Code 1 si un controle echoue.
 //
 // REGLE : tout controle ajoute ici doit avoir son sabotage dans test-a-l-envers.mjs.
@@ -35,7 +38,14 @@ function cibleExiste(dossier, lien) {
   return (existsSync(base) && statSync(base).isFile()) || existsSync(join(base, 'index.html'));
 }
 
-export function controler({ dossier, urlProd, mode = 'prod' }) {
+export function controler({ dossier, urlProd, mode = 'prod', seulement = null }) {
+  const resultat = controlerTout({ dossier, urlProd, mode });
+  if (!seulement) return resultat;
+  // 'build' (dist/ absent) n'est jamais filtre : sans site construit, rien n'est controle.
+  return { ...resultat, problemes: resultat.problemes.filter((p) => p.controle === 'build' || seulement.includes(p.controle)) };
+}
+
+function controlerTout({ dossier, urlProd, mode }) {
   const problemes = [];
   const signaler = (controle, page, detail) => problemes.push({ controle, page, detail });
 
@@ -165,8 +175,10 @@ export function controler({ dossier, urlProd, mode = 'prod' }) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const argMode = process.argv.find((a) => a.startsWith('--mode='))?.split('=')[1];
   const mode = argMode ?? (process.env.PUBLIC_ENV === 'dev' ? 'dev' : 'prod');
+  const seulement = process.argv.find((a) => a.startsWith('--seulement='))?.split('=')[1]?.split(',').filter(Boolean) ?? null;
   const config = JSON.parse(readFileSync(join(RACINE, 'site.config.json'), 'utf8'));
-  const { problemes, pages } = controler({ dossier: join(RACINE, 'dist'), urlProd: config.urlProd, mode });
+  const { problemes, pages } = controler({ dossier: join(RACINE, 'dist'), urlProd: config.urlProd, mode, seulement });
+  const portee = seulement ? `, controles : ${seulement.join(', ')}` : '';
 
   mkdirSync(join(RACINE, '.rapports'), { recursive: true });
   writeFileSync(
@@ -175,9 +187,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   );
 
   if (problemes.length === 0) {
-    console.log(`VERT - ${pages} pages controlees (mode ${mode}), aucun probleme.`);
+    console.log(`VERT - ${pages} pages controlees (mode ${mode}${portee}), aucun probleme.`);
   } else {
-    console.log(`ROUGE - ${problemes.length} probleme(s) sur ${pages} pages (mode ${mode}) :`);
+    console.log(`ROUGE - ${problemes.length} probleme(s) sur ${pages} pages (mode ${mode}${portee}) :`);
     for (const p of problemes) console.log(`  [${p.controle}] ${p.page} - ${p.detail}`);
     process.exit(1);
   }

@@ -31,8 +31,8 @@ Trois parties : mettre en place l'usine (une fois), créer un client (une comman
 | Commandes et garde-fou dans une vraie session Claude Code | Vérifié dans une session cloud (application Claude, compte `n-pestana`) : tests pilotes 1 à 8, 10, 11. Les commandes du dépôt fonctionnent tapées en entier mais n'apparaissent pas dans le menu `/` de l'application. Le hook `garde.mjs` refuse réellement (`git push --dry-run origin HEAD:main` → « REFUSE par le garde-fou du site ») |
 | Autorisation de mise en prod (ligne `!` de la commande) dans une session cloud | Vérifié : `prod.mjs` exige le jeton avant tout, et les mises en prod tapées ont abouti |
 | Appels `gh api` à travers le proxy GitHub d'une session cloud | Vérifié : création de demandes, fusion, tickets depuis la session cloud |
-| La session cloud travaille sur `dev` (test pilote 13) | **Rouge** : la session démarre sur une branche `claude/…` imposée par l'environnement cloud. `apercu.mjs` pousse quand même vers `dev` ; la consigne de `gabarit/CLAUDE.md` est à corriger |
-| Site de test publié même si un contrôle est rouge | **Rouge** : l'étape « Vérifier que le site de test n'est pas indexable » de `dev.yml` lance tous les contrôles ; un lien cassé empêche la publication (run 45238977506). À corriger |
+| La session cloud travaille sur `dev` (test pilote 13) | **Rouge** : la session démarre sur une branche `claude/…` imposée par l'environnement cloud. `apercu.mjs` pousse quand même vers `dev` ; consigne de `gabarit/CLAUDE.md` corrigée (gabarit/README.md, piège 9), **à revalider après diffusion** |
+| Site de test publié même si un contrôle est rouge | **Rouge** : l'étape « Vérifier que le site de test n'est pas indexable » de `dev.yml` lance tous les contrôles ; un lien cassé empêchait la publication (run 45238977506). Corrigé : `--seulement=indexation,robots`, testé dans les deux sens par `check:envers` (gabarit/README.md, piège 10), **à revalider après diffusion** |
 | Mise en route d'un client : liaison de son compte GitHub à Claude | **Non testé** avec un compte client (seulement avec `n-pestana`). L'application GitHub de Claude doit être installée par le propriétaire des dépôts (README de l'usine, piège 9) |
 
 ## 1. Mettre en place l'usine (une seule fois)
@@ -130,7 +130,7 @@ Crée un client pilote, puis déroule ces tests **dans une vraie session cloud, 
 | 10 | `/retour-en-arriere`, répondre « oui » | Site en ligne revenu à la version précédente, ticket d'information reçu | — |
 | 11 | Juste après le test 10 : `/mise-en-prod` | Les modifications annulées reviennent en ligne | — |
 | 12 | En mode maintenance, modifier un fichier de `scripts/` sur `dev`, puis faire lancer `/mise-en-prod` par le client | Fusion bloquée en attente de ton approbation, ticket créé | CODEOWNERS ou la règle « Require review from Code Owners » est mal réglé |
-| 13 | Vérifier que Claude travaille bien directement sur `dev` | Aucune branche `claude/…` créée | Si Claude crée sa propre branche : `/apercu` pousse quand même vers `dev`, mais le préciser davantage dans `gabarit/CLAUDE.md` |
+| 13 | Vérifier sur quelle branche travaille la session, puis faire un `/apercu` | Claude reste sur sa branche de départ (`dev`, ou `claude/…` imposée par la session cloud), n'en parle pas au client, ne propose pas de pull request ; le site de test est à jour | Constaté au pilote : la session cloud impose `claude/…`. Si Claude hésite ou en parle au client : renforcer `gabarit/CLAUDE.md`, « La branche de travail » |
 
 ## 4. Limites connues
 
