@@ -15,9 +15,9 @@ Trois parties : mettre en place l'usine (une fois), créer un client (une comman
 | `prerequis.sh` : arrêt avant toute création si un prérequis manque | Vérifié : 12 vérifications simulées (9 refus, 2 autorisations, aucun secret en argument), 3 sabotages détectés ; vert en réel pour `pilote` |
 | `mettre-a-jour-client.sh` : contenu du client préservé, gabarit réaligné | Vérifié en simulation (16 vérifications) |
 | `nouveau-client.sh` : création du dépôt, secrets, projet Cloudflare, premier push | Vérifié sur le pilote (`n-pestana/site-pilote`) : dépôt privé, secrets et variables GitHub, projet Pages, push HTTPS de `main` et `dev` workflows compris |
-| Protection de `main` (contrôle obligatoire, CODEOWNERS) sur un dépôt privé | **Refusée par GitHub en offre gratuite** : `Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)`. Décision en attente |
+| Protection de `main` (contrôle obligatoire, CODEOWNERS) sur un dépôt privé | Refusée en offre gratuite (`Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)`). **Posée après passage du compte en GitHub Pro** et relue par l'API : contrôle `controles` obligatoire, accord du propriétaire du code, ni push forcé ni suppression, CODEOWNERS sans erreur. Son effet sur un compte client (refus réel) : **non testé**, voir tests pilotes 6 et 12 |
 | `mettre-a-jour-client.sh` : clonage et envoi chez un vrai client | **Non exécuté** |
-| `outils/github.sh` | Exécuté sur le pilote : réglages généraux et étiquettes faits, protection de `main` refusée (ligne ci-dessus) |
+| `outils/github.sh` | Vérifié sur le pilote : `TERMINE - tous les reglages sont en place.` (après passage en Pro), relancé sans dommage |
 | Pose des variables du projet Pages par l'API Cloudflare | Vérifié sur le pilote : `GET` du projet, variables présentes en production et sur le site de test, secrets présents |
 | Workflow « Gabarit » de l'usine sur GitHub | Vérifié : run 45151361297, jobs `gabarit` et `outils` verts du premier coup, Node v22.23.5, 20 tests navigateur passés après `playwright install --with-deps`, artefact `captures-…` avec 8 captures |
 | Workflow « Site en ligne » d'un client, premier push | Vérifié sur le pilote (run 45224381379) : déploiement, puis `apres-deploiement.mjs` 10 verts, formulaire compris (mail accepté par Resend) |
@@ -49,7 +49,7 @@ Vérifie dans l'onglet Actions que le workflow **« Gabarit »** passe au vert. 
 
 1. **Cloudflare** : note l'identifiant du compte. Crée un jeton d'API personnalisé (aucun modèle) avec une seule permission : « Compte → Pages → Modifier » (« Pages Write »), sur ce compte, sans filtre d'adresse IP. Rien d'autre : ce jeton est copié dans le dépôt de chaque client.
 2. **Resend** : valide **un** domaine d'expédition à toi (l'offre gratuite n'en autorise qu'un, c'est suffisant), et mets une adresse de ce domaine dans `CONTACT_EXPEDITEUR`. Tous les formulaires des clients expédieront depuis cette adresse, avec l'adresse du visiteur en « répondre à ». Tu n'as donc rien à valider client par client. Crée une clé « Sending access » limitée à ce domaine : elle est posée dans le projet Pages de chaque client.
-3. **GitHub** : sur un dépôt privé, la protection de branche et CODEOWNERS demandent une offre payante. `outils/github.sh` te le dira explicitement à la première exécution. À trancher à ce moment-là : compte personnel Pro, ou organisation.
+3. **GitHub** : sur un dépôt privé, la protection de branche et CODEOWNERS demandent une offre payante (constaté : HTTP 403 en offre gratuite). Retenu : **GitHub Pro sur le compte personnel** propriétaire des dépôts, un abonnement unique quel que soit le nombre de clients ; les clients gardent un compte gratuit. Une organisation Team serait facturée par personne ayant accès, clients compris. Pro se souscrit dans Settings → Billing and plans, pas sur la page « pricing », qui ne montre que les offres d'organisation.
 
 ### Les deux fichiers de configuration
 
