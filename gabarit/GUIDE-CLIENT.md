@@ -9,6 +9,10 @@ Vous modifiez votre site en écrivant à Claude, en français courant. Rien à i
 | 🧪 **Site de test** | Vous seul | À chaque modification, pour regarder tranquillement |
 | 🌐 **Site en ligne** | Vos visiteurs | Uniquement quand **vous** tapez `/publier` |
 
+## Ouvrir votre site
+
+Cliquez sur votre favori **✨ Mon site**, puis appuyez sur Entrée : Claude vous accueille et vous dit où en sont vos deux sites. Sans le favori : ouvrez claude.ai/code, choisissez votre site et écrivez directement ce que vous voulez changer.
+
 ## En quatre gestes
 
 1. **💬 Demandez.** « Change les horaires du samedi », « ajoute une page sur nos tarifs », « remplace la photo de l'accueil par celle-ci ».

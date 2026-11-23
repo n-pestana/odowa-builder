@@ -141,3 +141,10 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
 
 - **Constat** (lecture de `gabarit/functions/api/contact.js`, tâche D7) : si `CONTACT_JETON_TEST` diffère entre GitHub et Cloudflare, la requête de test n'est pas reconnue comme un test. Avec Turnstile, elle est refusée (`403 captcha`) : c'est ce qui s'est passé sur le pilote. **Sans** `TURNSTILE_SECRET`, elle partirait comme un vrai message vers `CONTACT_EMAIL`, chez le client.
 - **Réflexe** : le jeton se change toujours aux deux endroits à la fois ; il n'est conservé nulle part ailleurs, on en régénère un (`openssl rand -hex 24`). Cloudflare ne l'applique qu'au déploiement suivant : relancer le dernier run « Site en ligne ».
+
+### 12. Une session cloud ne s'ouvre pas : le client doit écrire en premier
+
+- **Vécu** (pilote) : rien ne s'affiche tant que le client n'a pas envoyé un message. La sortie du hook `SessionStart` va dans le contexte de Claude, pas à l'écran.
+- **Cause** : aucun mécanisme documenté ne fait parler Claude en premier dans une session cloud ([hooks](https://code.claude.com/docs/en/hooks.md), [sessions cloud](https://code.claude.com/docs/en/claude-code-on-the-web.md)).
+- **Contournement** : un favori `https://claude.ai/code?repositories=PROPRIETAIRE/site-ID&prompt=Bonjour`. Constaté le 23/11/2026 : le dépôt est choisi et « Bonjour » est pré-rempli, **sans envoi** ; le client appuie sur Entrée et l'accueil s'affiche. Ces paramètres **ne sont pas documentés** par Anthropic : ils peuvent cesser de marcher sans prévenir. `nouveau-client.sh` affiche le lien.
+- **Réflexe** : si un client dit « le lien n'ouvre plus mon site », vérifier le favori soi-même. En repli, il ouvre claude.ai/code, choisit son site et écrit directement ce qu'il veut changer : l'accueil arrive en tête de la réponse.

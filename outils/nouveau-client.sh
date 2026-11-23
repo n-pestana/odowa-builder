@@ -114,8 +114,13 @@ if [[ "$SANS_VERIF" -eq 0 ]]; then
   fi
 fi
 
+# Favori du client : ouvre claude.ai/code sur son depot, « Bonjour » pre-rempli (il appuie sur Entree).
+# Parametres NON documentes par Anthropic, constates le 23/11/2026 (README de l'usine, piege 12).
+FAVORI="https://claude.ai/code?repositories=$DEPOT&prompt=Bonjour"
+
 if [[ -n "$SIMULATION" ]]; then
   echo; echo "SIMULATION : site prepare dans $TRAVAIL. Rien n'a ete cree sur GitHub ni Cloudflare."
+  echo "Favori du client : $FAVORI"
   bilan; exit 0
 fi
 
@@ -225,4 +230,5 @@ manuel "Cote client : abonnement Claude, connexion de son compte GitHub dans cla
 
 bilan
 echo; echo "Site de test : $URL_DEV"; echo "Depot        : https://github.com/$DEPOT"
+echo "Favori du client (MISE-EN-ROUTE.md) : $FAVORI"
 [[ "${#ECHECS[@]}" -eq 0 ]] || exit 1

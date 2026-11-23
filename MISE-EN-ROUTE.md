@@ -19,7 +19,7 @@ La liste à suivre avec chaque nouveau client, du jour de la création jusqu'à 
 - [ ] `bash outils/github.sh DEPOT LOGIN` : rôle écriture, jamais administrateur. Il accepte l'invitation reçue par mail
 - [ ] **Toi** : ajouter son dépôt à l'application GitHub de Claude (github.com/settings/installations → Claude → Configure → Only select repositories)
 - [ ] **Abonnement Claude** à son nom, puis connexion de son compte GitHub dans claude.ai/code *(non testé avec un compte client)*
-- [ ] Il ouvre une **session cloud** sur son dépôt et écrit « bonjour » : la carte d'accueil ✨ **Odowa Builder** s'affiche
+- [ ] Créer avec lui le **favori « ✨ Mon site »** sur son ordinateur et son téléphone : le lien affiché par `nouveau-client.sh` (`https://claude.ai/code?repositories=PROPRIETAIRE/site-ID&prompt=Bonjour`). Il clique, appuie sur Entrée : l'accueil ✨ **Odowa Builder** s'affiche *(lien non documenté par Anthropic : README de l'usine, piège 12)*
 - [ ] **Première modification de bout en bout, c'est lui qui tape** : une demande en français → `/voir` → il regarde sur son téléphone → `/publier` → « oui »
 - [ ] Lui montrer `/aide` et lui expliquer les couleurs : 🟢 tout va bien, 🟡 c'est à vous, ⏳ patientez, 🔴 bloqué, ⚪ pas pu vérifier
 - [ ] Lui envoyer le mail de bienvenue ci-dessous
@@ -38,7 +38,9 @@ La liste à suivre avec chaque nouveau client, du jour de la création jusqu'à 
 >
 > Votre site *Nom du site* est en ligne : *https://www.domaine.fr*
 >
-> Pour le modifier, ouvrez **claude.ai/code**, choisissez votre site, et écrivez ce que vous voulez changer, en français courant : « change les horaires du samedi », « ajoute une page sur nos tarifs ».
+> Pour le modifier, cliquez sur votre favori **✨ Mon site** (*lien*) et appuyez sur Entrée. Ensuite, écrivez ce que vous voulez changer, en français courant : « change les horaires du samedi », « ajoute une page sur nos tarifs ».
+>
+> Si le favori ne fonctionne plus, ouvrez **claude.ai/code**, choisissez votre site et écrivez directement votre demande.
 >
 > Vos modifications arrivent d'abord sur votre **site de test**, que vos visiteurs ne voient pas. Quand tout vous plaît, tapez **/publier** : le site est vérifié automatiquement, puis mis en ligne.
 >
