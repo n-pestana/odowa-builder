@@ -73,12 +73,12 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 |---|---|---|
 | `/aide` | — | Non |
 | `/etat` | `scripts/outils/etat.mjs` | Non |
-| `/apercu` | `scripts/outils/apercu.mjs` | Non |
+| `/voir` | `scripts/outils/apercu.mjs` | Non |
 | `/verifier` | `npm run check` + `etat.mjs` | Non |
-| `/mise-en-prod` | `scripts/outils/prod.mjs` | **Oui** |
-| `/retour-en-arriere` | `scripts/outils/prod.mjs` | **Oui** |
-| `/annuler-modifs` | `scripts/outils/annuler-modifs.mjs` | Non |
-| `/alerter-nicolas` | `scripts/outils/alerter.mjs` | Non |
+| `/publier` | `scripts/outils/prod.mjs` | **Oui** |
+| `/annuler-publication` | `scripts/outils/prod.mjs` | **Oui** |
+| `/recommencer` | `scripts/outils/annuler-modifs.mjs` | Non |
+| `/prevenir-nicolas` | `scripts/outils/alerter.mjs` | Non |
 
 Les commandes sont des fichiers `SKILL.md` courts dans `.claude/skills/`. La logique est dans les scripts, qui sont déterministes : Claude orchestre, il n'improvise pas les opérations git.
 
@@ -88,7 +88,7 @@ Les commandes sont des fichiers `SKILL.md` courts dans `.claude/skills/`. La log
 |---|---|---|---|
 | Règles | `CLAUDE.md` | Les erreurs de comportement | Un modèle qui se trompe |
 | Garde-fou | `.claude/hooks/garde.mjs` | Push sur `main`, action GitHub directe, fichiers réservés | Une commande shell tordue |
-| Autorisation | jeton créé par `/mise-en-prod` | Une mise en prod que le client n'a pas tapée | Voir l'usine, test pilote n° 2 |
+| Autorisation | jeton créé par `/publier` | Une mise en prod que le client n'a pas tapée | Voir l'usine, test pilote n° 2 |
 | **Verrou** | GitHub : `main` protégée, contrôle obligatoire, CODEOWNERS | Tout ce qui précède | Un administrateur du dépôt uniquement |
 
 Seul le dernier niveau est une garantie. Les trois premiers évitent d'y arriver.

@@ -1,4 +1,4 @@
-// /alerter-nicolas : cree un ticket GitHub, Nicolas recoit un mail et une notification.
+// /prevenir-nicolas : cree un ticket GitHub, Nicolas recoit un mail et une notification.
 //   node scripts/outils/alerter.mjs --urgence <prod-cassee|bloque|question> --message "..."
 
 import { fileURLToPath } from 'node:url';

@@ -1,5 +1,5 @@
 ---
-name: apercu
+name: voir
 description: Envoie les modifications en cours sur le site de TEST et donne l'adresse pour les regarder. Ne touche pas le site en ligne. À utiliser quand le client veut voir le résultat (« montre-moi », « je veux voir ce que ça donne »).
 allowed-tools: Bash(npm run build) Bash(npm run check) Bash(node scripts/outils/apercu.mjs *)
 ---
@@ -14,4 +14,4 @@ Envoie les modifications sur le site de test. Le site en ligne n'est pas touché
 3. Lance `node scripts/outils/apercu.mjs suivre`. Code 3 = pas encore fini : relance la même commande une minute plus tard.
 4. Donne au client **l'adresse du site de test** et la liste des pages à regarder. Pour un changement visuel, demande-lui de regarder aussi sur téléphone.
 
-Phrase d'état finale, par exemple : « C'est sur le site de test, pas encore en ligne. Regardez la page Prestations ici : <adresse>. Quand tout vous convient, tapez /mise-en-prod. »
+Phrase d'état finale, par exemple : « C'est sur le site de test, pas encore en ligne. Regardez la page Prestations ici : <adresse>. Quand tout vous convient, tapez /publier. »

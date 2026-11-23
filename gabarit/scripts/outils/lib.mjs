@@ -16,7 +16,7 @@ export const EN_COURS = 3;
 // Une erreur imprevue ne doit jamais laisser Claude deviner : message clair, code 1.
 process.on('uncaughtException', (erreur) => {
   console.log('ERREUR INATTENDUE : la commande s\'est arretee avant la fin. Ne pas reessayer en boucle.');
-  console.log('Verifier l\'etat avec "node scripts/outils/etat.mjs", puis lancer /alerter-nicolas avec le message ci-dessous.');
+  console.log('Verifier l\'etat avec "node scripts/outils/etat.mjs", puis lancer /prevenir-nicolas avec le message ci-dessous.');
   console.log(String(erreur?.stderr || erreur?.message || erreur).trim().split('\n').slice(0, 8).join('\n'));
   process.exit(1);
 });
@@ -63,7 +63,7 @@ export function gitEssai(...args) {
 
 export function actualiser() {
   if (gitEssai('fetch', '--quiet', '--prune', 'origin') === null) {
-    arreter('Impossible de joindre GitHub pour le moment. Reessayer dans une minute, ou /alerter-nicolas si cela dure.');
+    arreter('Impossible de joindre GitHub pour le moment. Reessayer dans une minute, ou /prevenir-nicolas si cela dure.');
   }
 }
 
@@ -163,8 +163,8 @@ export async function sonder(verification, { dureeMax = 100_000, intervalle = 10
 }
 
 // --- Autorisation de mise en prod ---------------------------------------------
-// Le jeton est cree uniquement quand le client tape lui-meme /mise-en-prod ou
-// /retour-en-arriere (voir les SKILL.md). Il vit dans .git/ : jamais versionne.
+// Le jeton est cree uniquement quand le client tape lui-meme /publier ou
+// /annuler-publication (voir les SKILL.md). Il vit dans .git/ : jamais versionne.
 const DUREE_JETON = 20 * 60 * 1000;
 const fichierJeton = () => join(git('rev-parse', '--absolute-git-dir'), 'jeton-site.json');
 

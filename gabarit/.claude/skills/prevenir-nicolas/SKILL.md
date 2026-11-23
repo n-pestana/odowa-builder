@@ -1,5 +1,5 @@
 ---
-name: alerter-nicolas
+name: prevenir-nicolas
 description: Prévient Nicolas par une notification, avec le détail de la situation. À utiliser quand le client demande de l'aide humaine, quand le site en ligne a un problème, quand le client est bloqué, ou quand une demande touche un fichier réservé.
 argument-hint: [message pour Nicolas]
 allowed-tools: Bash(node scripts/outils/alerter.mjs *)
@@ -16,4 +16,4 @@ Préviens Nicolas. Message du client, s'il en a donné un : $ARGUMENTS
 
 Dis ensuite au client que Nicolas est prévenu et donne le numéro du ticket. Si l'envoi a **échoué**, dis-le clairement et donne les coordonnées de secours affichées par le script : ne laisse jamais le client croire que Nicolas est prévenu s'il ne l'est pas.
 
-Si l'urgence est `prod-cassee` et que la dernière mise en ligne est récente, rappelle au client qu'il peut taper `/retour-en-arriere`.
+Si l'urgence est `prod-cassee` et que la dernière mise en ligne est récente, rappelle au client qu'il peut taper `/annuler-publication`.

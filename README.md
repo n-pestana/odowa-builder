@@ -71,18 +71,18 @@ Procédure exécutée sur le pilote (tâche E, gabarit `051a7aa` → `9bc0a37`).
 1. **Modifier `gabarit/`**, lancer les contrôles d'avant-push, pousser l'usine, attendre le workflow « Gabarit » vert.
 2. **Diffuser** : `outils/mettre-a-jour-client.sh IDENTIFIANT` (ou `--tous`), avec `gh` connecté en `n-pestana` (`gh auth switch -u n-pestana` si besoin). Le script clone `dev`, applique le gabarit sans toucher à `src/`, `public/`, aux valeurs de `site.config.json` ni à `CODEOWNERS`, relance build et contrôles **avec le contenu du client**, et ne pousse sur `dev` que si tout est vert. Il met à jour `versionGabarit` dans `clients/IDENTIFIANT.json` : committer l'usine ensuite.
 3. **Vérifier** : run « Site de test » vert (`gh run list --repo n-pestana/site-IDENTIFIANT`), et un coup d'œil au site de test.
-4. **Mettre en ligne toi-même, sans attendre** : tant que la mise à jour est sur `dev` sans être en ligne, toute `/mise-en-prod` du client est bloquée (elle emporterait des fichiers réservés : `Waiting on code owner review from n-pestana`, HTTP 405). Depuis un clone du dépôt du client, à jour sur `dev` :
+4. **Mettre en ligne toi-même, sans attendre** : tant que la mise à jour est sur `dev` sans être en ligne, toute publication du client (`/publier`) est bloquée (elle emporterait des fichiers réservés : `Waiting on code owner review from n-pestana`, HTTP 405). Depuis un clone du dépôt du client, à jour sur `dev` :
    ```bash
    gh repo clone n-pestana/site-IDENTIFIANT && cd site-IDENTIFIANT   # ou : git pull --ff-only origin dev
    nvm use && npm ci
-   node scripts/outils/jeton.mjs creer mise-en-prod      # c'est toi qui tapes : tu es l'auteur de la demande
-   node scripts/outils/prod.mjs preparer-mise-en-prod   # note le numéro N
+   node scripts/outils/jeton.mjs creer publier      # c'est toi qui tapes : tu es l'auteur de la demande
+   node scripts/outils/prod.mjs preparer-publication   # note le numéro N
    node scripts/outils/prod.mjs attendre N              # relancer tant qu'il répond "PAS ENCORE"
    node scripts/outils/prod.mjs fusionner N
    node scripts/outils/prod.mjs suivre                  # relancer tant qu'il répond "PAS ENCORE"
    ```
    **Constaté au pilote** : la demande ouverte par `n-pestana` est `mergeable_state: clean` et la fusion par l'API passe (demande #10). La même demande ouverte par le client était `blocked` et refusée. Tu n'as donc rien à approuver pour tes propres mises à jour. Cause probable, non vérifiée dans la documentation de GitHub : tu es l'unique propriétaire du code, ta propre demande satisfait la règle ; à défaut, ce serait ton droit d'administrateur (`enforce_admins: false`). Dans les deux cas, ne pas passer `enforce_admins` à `true`.
-5. **Si un client a lancé `/mise-en-prod` entre-temps** : sa demande est bloquée et Claude t'alerte. Deux voies : relancer toi-même l'étape 4 (`preparer` ferme sa demande et en ouvre une à ton nom), ou approuver sa demande dans l'interface GitHub (« Review changes » → « Approve »), puis lui faire relancer `/mise-en-prod`.
+5. **Si un client a lancé `/publier` entre-temps** : sa demande est bloquée et Claude t'alerte. Deux voies : relancer toi-même l'étape 4 (`preparer` ferme sa demande et en ouvre une à ton nom), ou approuver sa demande dans l'interface GitHub (« Review changes » → « Approve »), puis lui faire relancer `/publier`.
 
 ## Les pièges de l'usine
 

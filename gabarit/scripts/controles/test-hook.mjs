@@ -3,7 +3,7 @@
 // Usage : npm run check:hook
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,7 +49,7 @@ const cas = [
   ['gh api avec champ', bash('gh api repos/a/b/issues -f title=x'), 'refuse'],
   ['gh workflow run', bash('gh workflow run prod.yml'), 'refuse'],
   ['wrangler deploy', bash('npx wrangler pages deploy dist --branch=main'), 'refuse'],
-  ['creation de jeton par Claude', bash('node scripts/outils/jeton.mjs creer mise-en-prod'), 'refuse'],
+  ['creation de jeton par Claude', bash('node scripts/outils/jeton.mjs creer publier'), 'refuse'],
   ['ecriture directe du jeton', bash('echo x > .git/jeton-site.json'), 'refuse'],
   ['sed -i sur un test', bash("sed -i 's/a/b/' tests/navigateur.spec.js"), 'refuse'],
   ['rm d\'un workflow', bash('rm .github/workflows/prod.yml'), 'refuse'],
@@ -64,7 +64,7 @@ const cas = [
   ['push sur main en maintenance', bash('git push origin main'), 'refuse', { GABARIT_MAINTENANCE: '1' }],
   ['lecture des journaux gh hors maintenance', bash('gh run view 123 --log-failed'), 'refuse'],
   ['gh secret set hors maintenance', bash('gh secret set CLOUDFLARE_API_TOKEN'), 'refuse'],
-  ['jeton en maintenance', bash('node scripts/outils/jeton.mjs creer mise-en-prod'), 'refuse', { GABARIT_MAINTENANCE: '1' }],
+  ['jeton en maintenance', bash('node scripts/outils/jeton.mjs creer publier'), 'refuse', { GABARIT_MAINTENANCE: '1' }],
   ['wrangler deploy en maintenance', bash('npx wrangler pages deploy dist --branch=main'), 'refuse', { GABARIT_MAINTENANCE: '1' }],
   ['push force en maintenance', bash('git push --force origin dev'), 'refuse', { GABARIT_MAINTENANCE: '1' }],
 
@@ -78,7 +78,7 @@ const cas = [
   ['git status', bash('git status'), 'autorise'],
   ['build et controles', bash('npm run build && npm run check'), 'autorise'],
   ['commande /etat', bash('node scripts/outils/etat.mjs'), 'autorise'],
-  ['commande /apercu', bash('node scripts/outils/apercu.mjs --message "Nouveaux horaires"'), 'autorise'],
+  ['commande /voir', bash('node scripts/outils/apercu.mjs --message "Nouveaux horaires"'), 'autorise'],
   ['commande prod (le script verifie le jeton)', bash('node scripts/outils/prod.mjs attendre 12'), 'autorise'],
   ['sortie d\'un script vers /tmp', bash('node scripts/outils/etat.mjs > /tmp/etat.txt'), 'autorise'],
   ['gh api en lecture', bash('gh api repos/a/b/pulls/3'), 'autorise'],
@@ -109,8 +109,65 @@ for (const [nom, entree, attendu, env = {}] of cas) {
 rmSync(surMain, { recursive: true, force: true });
 rmSync(surDev, { recursive: true, force: true });
 
+// --- Coherence des noms de commandes ------------------------------------------------
+// Une commande citee sans SKILL.md, ou un nom d'autorisation different entre le SKILL.md,
+// jeton.mjs et prod.mjs, ne se voit qu'au moment ou le client tape la commande.
+// Exportee pour etre testee a l'envers (voir plus bas).
+export function incoherencesCommandes(racine) {
+  const lire = (f) => readFileSync(join(racine, f), 'utf8');
+  const dossierSkills = join(racine, '.claude', 'skills');
+  const commandes = readdirSync(dossierSkills).filter((d) => existsSync(join(dossierSkills, d, 'SKILL.md')));
+  const problemes = [];
+  const actionsJeton = (lire('scripts/outils/jeton.mjs').match(/const ACTIONS = \[([^\]]*)\]/)?.[1] ?? '').match(/[\w-]+/g) ?? [];
+  const actionsProd = (lire('scripts/outils/prod.mjs').match(/const PREFIXES = \{([^}]*)\}/)?.[1] ?? '').match(/: '([\w-]+)'/g)?.map((m) => m.slice(3, -1)) ?? [];
+  for (const c of commandes) {
+    const texte = lire(`.claude/skills/${c}/SKILL.md`);
+    if (!new RegExp(`^name: ${c}$`, 'm').test(texte)) problemes.push(`${c}/SKILL.md : "name:" differe du dossier`);
+    const creations = [...texte.matchAll(/jeton\.mjs creer ([\w-]+)/g)].map((m) => m[1]);
+    for (const a of creations) {
+      if (a !== c) problemes.push(`${c}/SKILL.md cree l'autorisation "${a}" au lieu de "${c}"`);
+      if (!actionsJeton.includes(a)) problemes.push(`autorisation "${a}" inconnue de jeton.mjs`);
+      if (!actionsProd.includes(a)) problemes.push(`autorisation "${a}" inconnue de prod.mjs`);
+    }
+  }
+  for (const a of new Set([...actionsJeton, ...actionsProd])) {
+    if (!commandes.includes(a)) problemes.push(`autorisation "${a}" sans commande /${a}`);
+  }
+  const sources = ['CLAUDE.md', 'GUIDE-CLIENT.md', 'README.md', '.claude/hooks/garde.mjs',
+    ...commandes.map((c) => `.claude/skills/${c}/SKILL.md`),
+    ...readdirSync(join(racine, 'scripts/outils')).filter((f) => f.endsWith('.mjs')).map((f) => `scripts/outils/${f}`)];
+  for (const f of sources) {
+    for (const m of lire(f).matchAll(/(?<=^|[\s`«(])\/([a-z][a-z-]*[a-z])(?=$|[\s`».,;:)'"])/gm)) {
+      if (!commandes.includes(m[1])) problemes.push(`${f} cite /${m[1]}, qui n'existe pas`);
+    }
+  }
+  return problemes;
+}
+
+const incoherences = incoherencesCommandes(RACINE);
+for (const p of incoherences) console.log(`ECHEC  commandes - ${p}`);
+if (incoherences.length === 0) console.log('OK     commandes - noms coherents entre SKILL.md, jeton.mjs, prod.mjs et la documentation');
+rates += incoherences.length;
+
+// A l'envers : sur une copie, chaque sabotage doit etre detecte.
+const sabotages = [
+  ['commande citee qui n\'existe pas', 'CLAUDE.md', (t) => t + '\nTapez `/mise-en-prod`.\n', '/mise-en-prod'],
+  ['autorisation differente du nom de la commande', '.claude/skills/publier/SKILL.md', (t) => t.replaceAll('creer publier', 'creer mise-en-prod'), 'au lieu de'],
+  ['autorisation inconnue de prod.mjs', 'scripts/outils/prod.mjs', (t) => t.replace("'prod/': 'publier'", "'prod/': 'mise-en-prod'"), 'inconnue de prod.mjs'],
+];
+for (const [nom, fichierSabote, saboter, attendu] of sabotages) {
+  const copie = mkdtempSync(join(tmpdir(), 'commandes-'));
+  cpSync(RACINE, copie, { recursive: true, filter: (s) => !/node_modules|[\\/]dist$|[\\/]\.git$/.test(s) });
+  const cible = join(copie, fichierSabote);
+  writeFileSync(cible, saboter(readFileSync(cible, 'utf8')));
+  const detecte = incoherencesCommandes(copie).some((p) => p.includes(attendu));
+  rmSync(copie, { recursive: true, force: true });
+  if (!detecte) rates += 1;
+  console.log(`${detecte ? 'OK    ' : 'ECHEC '} sabotage - ${nom}${detecte ? '' : ' : NON detecte'}`);
+}
+
 if (rates > 0) {
   console.log(`\nROUGE - ${rates} cas sur ${cas.length} ne se comportent pas comme prevu.`);
   process.exit(1);
 }
-console.log(`\nVERT - ${cas.length} cas, tous conformes.`);
+console.log(`\nVERT - ${cas.length} cas du garde-fou conformes ; noms de commandes coherents ; 3 sabotages detectes.`);

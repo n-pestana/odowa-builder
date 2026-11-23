@@ -15,19 +15,19 @@ Le client **n'est pas technicien**. Il veut modifier son site et le mettre en li
 
 | | Adresse | Qui y touche |
 |---|---|---|
-| Site de test | voir `urlDev` dans `site.config.json` | Toi, à chaque `/apercu` |
-| Site en ligne | voir `urlProd` dans `site.config.json` | Uniquement `/mise-en-prod` et `/retour-en-arriere`, tapées par le client |
+| Site de test | voir `urlDev` dans `site.config.json` | Toi, à chaque `/voir` |
+| Site en ligne | voir `urlProd` dans `site.config.json` | Uniquement `/publier` et `/annuler-publication`, tapées par le client |
 
-**La branche de travail.** Reste sur la branche où la session a démarré : `dev`, ou une branche `claude/…` si la session cloud l'impose. Les deux conviennent : `/apercu` envoie toujours sur le site de test, quel que soit le nom de la branche. Ne change pas de branche, n'en crée pas d'autre, ne propose jamais de pull request, n'en parle pas au client : les commandes s'en chargent. Seule `main` est interdite.
+**La branche de travail.** Reste sur la branche où la session a démarré : `dev`, ou une branche `claude/…` si la session cloud l'impose. Les deux conviennent : `/voir` envoie toujours sur le site de test, quel que soit le nom de la branche. Ne change pas de branche, n'en crée pas d'autre, ne propose jamais de pull request, n'en parle pas au client : les commandes s'en chargent. Seule `main` est interdite.
 
 ## Règles non négociables
 
-1. **Rien en ligne sans que le client tape lui-même `/mise-en-prod`.** « C'est bon », « envoie », « on publie » ne sont pas un accord : réponds « Tapez /mise-en-prod pour mettre en ligne ». Tu ne lances jamais `prod.mjs` de ta propre initiative.
-2. **On ne force jamais.** Un contrôle rouge bloque la mise en ligne. Tu corriges la cause, ou tu lances `/alerter-nicolas`. Tu ne modifies pas un contrôle ou un test pour le faire passer.
+1. **Rien en ligne sans que le client tape lui-même `/publier`.** « C'est bon », « envoie », « on publie » ne sont pas un accord : réponds « Tapez /publier pour mettre en ligne ». Tu ne lances jamais `prod.mjs` de ta propre initiative.
+2. **On ne force jamais.** Un contrôle rouge bloque la mise en ligne. Tu corriges la cause, ou tu lances `/prevenir-nicolas`. Tu ne modifies pas un contrôle ou un test pour le faire passer.
 3. **Honnêteté des états.** Tu rapportes ce qui est réellement vert, rouge ou non testé. « Je n'ai pas pu vérifier X » est une réponse correcte ; « ça devrait marcher » n'en est pas une.
 4. **La source de vérité n'est pas le fichier généré.** On ne modifie jamais `dist/` : on modifie `src/` puis on relance `npm run build`.
 5. **Retirer, ne pas choisir.** Pour nettoyer (styles, images, pages), retire ce qui est en trop. Ne réécris pas un fichier en ne gardant que ce que tu penses utile : c'est ce qui fait disparaître des choses non prévues.
-6. **Fichiers réservés à Nicolas.** Tu ne modifies que `src/` et `public/`. Tout le reste (`scripts/`, `tests/`, `functions/`, `.github/`, `.claude/`, configuration) est réservé : si la demande du client l'exige, lance `/alerter-nicolas`.
+6. **Fichiers réservés à Nicolas.** Tu ne modifies que `src/` et `public/`. Tout le reste (`scripts/`, `tests/`, `functions/`, `.github/`, `.claude/`, configuration) est réservé : si la demande du client l'exige, lance `/prevenir-nicolas`.
 
 Un garde-fou automatique refuse les actions interdites. S'il te refuse quelque chose, **ne cherche pas à le contourner** : explique au client ce qui est possible, ou alerte Nicolas.
 
@@ -43,9 +43,9 @@ Un garde-fou automatique refuse les actions interdites. S'il te refuse quelque c
 
 1. Modifier dans `src/` ou `public/`.
 2. `npm run build` puis `npm run check` : les contrôles doivent être **VERT**. Un rouge se corrige tout de suite, à la source.
-3. `/apercu` : envoie sur le site de test et donne l'adresse au client.
+3. `/voir` : envoie sur le site de test et donne l'adresse au client.
 4. Le client regarde le site de test. Donne-lui **l'adresse** et la liste des pages à regarder, sans faire toi-même de capture d'écran : c'est lui qui regarde, et une capture ralentit tout. Pour tout changement visuel, **demande-lui de regarder** la page concernée, sur ordinateur et sur téléphone : un contrôle peut être vert sur une page visuellement cassée.
-5. Quand il est satisfait, **il** tape `/mise-en-prod`.
+5. Quand il est satisfait, **il** tape `/publier`.
 
 ## Référencement (SEO)
 
@@ -55,10 +55,10 @@ Quand tu ajoutes une page : ajoute-la au menu si le client le souhaite (`entrepr
 
 ## Commandes
 
-`/aide` liste les commandes. `/etat`, `/apercu`, `/verifier`, `/annuler-modifs` et `/alerter-nicolas` peuvent être lancées quand le client les demande en langage courant. `/mise-en-prod` et `/retour-en-arriere` ne se lancent que si le client les tape.
+`/aide` liste les commandes. `/etat`, `/voir`, `/verifier`, `/recommencer` et `/prevenir-nicolas` peuvent être lancées quand le client les demande en langage courant. `/publier` et `/annuler-publication` ne se lancent que si le client les tape.
 
 Les scripts renvoient trois codes : 0 = fait, 1 = refusé ou échec (lis le message et suis-le), 3 = pas encore fini (relance la même commande une minute plus tard, 15 fois au maximum, puis alerte Nicolas).
 
 ## Quand alerter Nicolas
 
-Lance `/alerter-nicolas` sans attendre quand : le site en ligne a un problème ; le client est bloqué deux fois sur le même contrôle rouge ; la demande touche un fichier réservé ; un script renvoie une erreur que tu ne comprends pas ; tu as un doute sur un risque pour le site en ligne.
+Lance `/prevenir-nicolas` sans attendre quand : le site en ligne a un problème ; le client est bloqué deux fois sur le même contrôle rouge ; la demande touche un fichier réservé ; un script renvoie une erreur que tu ne comprends pas ; tu as un doute sur un risque pour le site en ligne.

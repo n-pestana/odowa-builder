@@ -1,6 +1,6 @@
-// Actions sur le SITE EN LIGNE : /mise-en-prod et /retour-en-arriere.
+// Actions sur le SITE EN LIGNE : /publier et /annuler-publication.
 //
-//   node scripts/outils/prod.mjs preparer-mise-en-prod
+//   node scripts/outils/prod.mjs preparer-publication
 //   node scripts/outils/prod.mjs preparer-retour
 //   node scripts/outils/prod.mjs attendre <numero>
 //   node scripts/outils/prod.mjs fusionner <numero>
@@ -38,7 +38,7 @@ import {
 import { creerAlerte } from './alerter.mjs';
 
 const [, , ordre, argument] = process.argv;
-const PREFIXES = { 'prod/': 'mise-en-prod', 'retour/': 'retour-en-arriere' };
+const PREFIXES = { 'prod/': 'publier', 'retour/': 'annuler-publication' };
 const actionDeLaBranche = (ref) => Object.entries(PREFIXES).find(([prefixe]) => ref.startsWith(prefixe))?.[1];
 
 function listeFichiers(avant, apres) {
@@ -80,14 +80,14 @@ function lireDemande(numero) {
 }
 
 // ---------------------------------------------------------------------------------
-if (ordre === 'preparer-mise-en-prod') {
-  exigerJeton('mise-en-prod');
+if (ordre === 'preparer-publication') {
+  exigerJeton('publier');
   if (git('status', '--porcelain') !== '') {
-    arreter('REFUSE : il reste des modifications pas encore envoyees sur le site de test. Lancer /apercu d\'abord, verifier, puis relancer /mise-en-prod.');
+    arreter('REFUSE : il reste des modifications pas encore envoyees sur le site de test. Lancer /voir d\'abord, verifier, puis relancer /publier.');
   }
   actualiser();
   if (Number(git('rev-list', '--count', `origin/${DEV}..HEAD`)) > 0) {
-    arreter('REFUSE : des modifications enregistrees ne sont pas encore sur le site de test. Lancer /apercu d\'abord.');
+    arreter('REFUSE : des modifications enregistrees ne sont pas encore sur le site de test. Lancer /voir d\'abord.');
   }
   const dev = commit(`origin/${DEV}`);
   if (arbre(dev) === arbre(`origin/${PROD}`)) {
@@ -101,7 +101,7 @@ if (ordre === 'preparer-mise-en-prod') {
     arreter(
       `REFUSE : les controles automatiques du site de test ne sont pas verts (${controles.etat}).\n` +
         `${controles.lien ? `Detail : ${controles.lien}\n` : ''}` +
-        'Rien n\'a ete mis en prod. Corriger puis relancer /apercu, ou lancer /alerter-nicolas. Il n\'existe pas de moyen de forcer.',
+        'Rien n\'a ete mis en prod. Corriger puis relancer /voir, ou lancer /prevenir-nicolas. Il n\'existe pas de moyen de forcer.',
     );
   }
   const fichiers = listeFichiers(`origin/${PROD}`, dev);
@@ -121,19 +121,19 @@ if (ordre === 'preparer-mise-en-prod') {
 
 // ---------------------------------------------------------------------------------
 else if (ordre === 'preparer-retour') {
-  exigerJeton('retour-en-arriere');
+  exigerJeton('annuler-publication');
   actualiser();
   const tete = commit(`origin/${PROD}`);
   const sujet = git('log', '-1', '--format=%s', tete);
   if (sujet.startsWith('Retour en arriere')) {
-    arreter('REFUSE : la derniere action sur le site en ligne est deja un retour en arriere. On ne remonte que d\'un cran. Pour aller plus loin : /alerter-nicolas.');
+    arreter('REFUSE : la derniere action sur le site en ligne est deja un retour en arriere. On ne remonte que d\'un cran. Pour aller plus loin : /prevenir-nicolas.');
   }
   let precedent = gitEssai('rev-parse', '--verify', '--quiet', `${tete}~1`);
   if (!precedent) {
     gitEssai('fetch', '--quiet', '--deepen=20', 'origin', PROD);
     precedent = gitEssai('rev-parse', '--verify', '--quiet', `${tete}~1`);
   }
-  if (!precedent) arreter('REFUSE : il n\'y a pas de version precedente du site en ligne. Lancer /alerter-nicolas.');
+  if (!precedent) arreter('REFUSE : il n\'y a pas de version precedente du site en ligne. Lancer /prevenir-nicolas.');
   const sujetPrecedent = git('log', '-1', '--format=%s', precedent);
   const datePrecedent = dateFr(git('log', '-1', '--format=%cI', precedent));
   fermerDemandesOuvertes();
@@ -182,13 +182,13 @@ else if (ordre === 'fusionner') {
     arreter(
       `BLOQUE : GitHub a refuse la fusion de la demande #${argument}.\n` +
         'Cause la plus frequente : la modification touche des fichiers reserves a Nicolas, qui doit donner son accord.\n' +
-        `Rien n'a ete mis en ligne. Lancer /alerter-nicolas en citant la demande #${argument}.\n${erreur.message}`,
+        `Rien n'a ete mis en ligne. Lancer /prevenir-nicolas en citant la demande #${argument}.\n${erreur.message}`,
     );
   }
   consommerJeton();
-  if (action === 'retour-en-arriere') {
+  if (action === 'annuler-publication') {
     try {
-      creerAlerte({ urgence: 'info', titre: `[${config.nomSite}] Retour en arriere utilise`, message: `Le client a lance /retour-en-arriere (demande #${argument}). ${demande.body ?? ''}` });
+      creerAlerte({ urgence: 'info', titre: `[${config.nomSite}] Retour en arriere utilise`, message: `Le client a lance /annuler-publication (demande #${argument}). ${demande.body ?? ''}` });
     } catch {
       console.log('(Nicolas n\'a pas pu etre prevenu automatiquement du retour en arriere.)');
     }
@@ -207,7 +207,7 @@ else if (ordre === 'suivre') {
   } else if (deploiement.etat === 'rouge') {
     arreter(
       `ECHEC du deploiement ou de la verification du site en ligne. Detail : ${deploiement.lien}\n` +
-        'Nicolas a ete alerte automatiquement. Dire au client d\'ouvrir le site en ligne : s\'il est casse, proposer /retour-en-arriere.',
+        'Nicolas a ete alerte automatiquement. Dire au client d\'ouvrir le site en ligne : s\'il est casse, proposer /annuler-publication.',
     );
   } else {
     arreter('PAS ENCORE FINI : le deploiement est en cours. Relancer cette commande dans une minute.', EN_COURS);
@@ -216,5 +216,5 @@ else if (ordre === 'suivre') {
 
 // ---------------------------------------------------------------------------------
 else {
-  arreter('Ordres possibles : preparer-mise-en-prod | preparer-retour | attendre <n> | fusionner <n> | suivre');
+  arreter('Ordres possibles : preparer-publication | preparer-retour | attendre <n> | fusionner <n> | suivre');
 }

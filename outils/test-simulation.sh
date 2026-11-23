@@ -33,6 +33,7 @@ echo "photo" >"$SITE/public/photo-du-client.jpg"
 node -e "const f='$SITE/site.config.json',fs=require('fs');const c=JSON.parse(fs.readFileSync(f,'utf8'));delete c.formulaireContact;fs.writeFileSync(f,JSON.stringify(c,null,2)+'\n')"
 echo "// derive" >>"$SITE/scripts/outils/lib.mjs"
 echo "obsolete" >"$SITE/scripts/outils/ancien-script.mjs"
+mkdir -p "$SITE/.claude/skills/ancienne-commande" && echo "obsolete" >"$SITE/.claude/skills/ancienne-commande/SKILL.md"
 SOMME_CONTENU="$(cd "$SITE" && find src public -type f -exec sha256sum {} + | sort | sha256sum)"
 SOMME_PROPRIETAIRES="$(sha256sum <"$SITE/.github/CODEOWNERS")"
 
@@ -44,6 +45,7 @@ verifier "valeurs du client conservees dans site.config.json" "grep -q 'Boulange
 verifier "cle nouvelle ajoutee a site.config.json" "grep -q 'formulaireContact' '$SITE/site.config.json'"
 verifier "fichier du gabarit remis a sa version" "cmp -s '$USINE/gabarit/scripts/outils/lib.mjs' '$SITE/scripts/outils/lib.mjs'"
 verifier "fichier obsolete du gabarit supprime" "[[ ! -e '$SITE/scripts/outils/ancien-script.mjs' ]]"
+verifier "commande renommee : l'ancienne disparait chez le client" "[[ ! -e '$SITE/.claude/skills/ancienne-commande/SKILL.md' && -f '$SITE/.claude/skills/publier/SKILL.md' ]]"
 
 # --- Prerequis de la creation reelle : chaque verification refusee ET autorisee -----
 # gh et curl sont remplaces par des faux qui notent leurs appels : rien ne sort sur le reseau.

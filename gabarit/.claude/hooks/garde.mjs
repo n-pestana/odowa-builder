@@ -57,7 +57,7 @@ if (['Edit', 'Write', 'MultiEdit', 'NotebookEdit'].includes(outil)) {
     }
     if (rel.startsWith('.git/')) refuser('on ne modifie jamais le dossier .git a la main.');
     if (!MAINTENANCE && !DOSSIERS_LIBRES.some((d) => rel.startsWith(d))) {
-      refuser(`"${rel}" fait partie des fichiers reserves a Nicolas (garde-fous, tests, configuration). Seuls src/ et public/ sont modifiables. Si la demande du client l'exige, lancer /alerter-nicolas.`);
+      refuser(`"${rel}" fait partie des fichiers reserves a Nicolas (garde-fous, tests, configuration). Seuls src/ et public/ sont modifiables. Si la demande du client l'exige, lancer /prevenir-nicolas.`);
     }
   }
   process.exit(0);
@@ -80,7 +80,7 @@ function brancheCourante() {
 // REGLE JETON (voir INSTALLATION.md du depot usine, test pilote n° 2) : l'autorisation de mise en prod
 // ne peut etre creee que par le client qui tape la commande, jamais par Claude.
 if (/jeton\.mjs|jeton-site\.json/.test(commande)) {
-  refuser('l\'autorisation de mise en prod ne se cree pas a la main. Elle est creee quand le client tape lui-meme /mise-en-prod ou /retour-en-arriere.');
+  refuser('l\'autorisation de mise en prod ne se cree pas a la main. Elle est creee quand le client tape lui-meme /publier ou /annuler-publication.');
 }
 
 for (const morceau of morceaux) {
@@ -93,22 +93,22 @@ for (const morceau of morceaux) {
       const cibles = mots.slice(iPush + 1).filter((m) => !m.startsWith('-'));
       const refspecs = cibles.slice(1);
       if (options.some((o) => /^(-f|--force|--force-with-lease.*|--force-if-includes|-[a-zA-Z]*f[a-zA-Z]*)$/.test(o)) || refspecs.some((r) => r.startsWith('+'))) {
-        refuser('pas de "push" force : cela reecrit l\'historique. Pour repartir de l\'etat du site en ligne, utiliser /annuler-modifs.');
+        refuser('pas de "push" force : cela reecrit l\'historique. Pour repartir de l\'etat du site en ligne, utiliser /recommencer.');
       }
       if (options.some((o) => /^(--all|--mirror|--delete|-d|--tags|--prune)$/.test(o)) || refspecs.some((r) => r.startsWith(':'))) {
-        refuser('cette forme de "push" (toutes les branches, suppression, etiquettes) n\'est pas utilisee ici. Utiliser /apercu.');
+        refuser('cette forme de "push" (toutes les branches, suppression, etiquettes) n\'est pas utilisee ici. Utiliser /voir.');
       }
       const destinations = refspecs.map((r) => (r.includes(':') ? r.split(':')[1] : r).replace(/^refs\/heads\//, ''));
       const implicite = refspecs.length === 0 || destinations.some((d) => d === 'HEAD' || d === '@');
       if (destinations.includes(PROD) || (implicite && brancheCourante() === PROD)) {
-        refuser(`on ne pousse jamais sur "${PROD}" : c'est le site en ligne. La seule voie est la commande /mise-en-prod, tapee par le client.`);
+        refuser(`on ne pousse jamais sur "${PROD}" : c'est le site en ligne. La seule voie est la commande /publier, tapee par le client.`);
       }
     }
     if (/\bgit\b.*\b(switch|checkout)\b/.test(morceau) && mots.includes(PROD) && !mots.includes('--')) {
       refuser(`on ne travaille jamais sur la branche "${PROD}". Rester sur la branche de travail. (Pour reprendre un fichier du site en ligne : git checkout ${PROD} -- chemin/du/fichier)`);
     }
     if (/\breset\b.*--hard|\bclean\b.*\s-[a-zA-Z]*f|\bbranch\b.*\s-D\b|\bfilter-branch\b|\bupdate-ref\b|\bcommit-tree\b|\bcommit\b.*--amend|\brebase\b/.test(morceau)) {
-      refuser('commande git destructive ou qui reecrit l\'historique. Pour jeter les modifications en cours, utiliser /annuler-modifs ; en cas de doute, /alerter-nicolas.');
+      refuser('commande git destructive ou qui reecrit l\'historique. Pour jeter les modifications en cours, utiliser /recommencer ; en cas de doute, /prevenir-nicolas.');
     }
   }
 
@@ -118,12 +118,12 @@ for (const morceau of morceaux) {
       /\bgh\s+(pr|issue|release|repo|workflow|run|secret|variable|auth|ruleset|label)\b/.test(morceau) ||
       (/\bgh\s+api\b/.test(morceau) && /(\s-X\s*(?!GET)[A-Za-z]|--method[=\s]+(?!GET)[A-Za-z]|\s-[fF]\b|--field|--raw-field|--input)/.test(morceau));
     if (ecriture) {
-      refuser('pas d\'action directe sur GitHub. Passer par les commandes du site : /apercu, /mise-en-prod, /retour-en-arriere, /alerter-nicolas. (La lecture avec "gh api" en GET reste permise.)');
+      refuser('pas d\'action directe sur GitHub. Passer par les commandes du site : /voir, /publier, /annuler-publication, /prevenir-nicolas. (La lecture avec "gh api" en GET reste permise.)');
     }
   }
 
   if (/\bwrangler\b.*\b(deploy|publish|delete|rollback|secret)\b/.test(morceau)) {
-    refuser('on ne deploie jamais a la main sur Cloudflare. Le deploiement est fait automatiquement apres /apercu et /mise-en-prod.');
+    refuser('on ne deploie jamais a la main sur Cloudflare. Le deploiement est fait automatiquement apres /voir et /publier.');
   }
 
   if (!MAINTENANCE) {
@@ -134,7 +134,7 @@ for (const morceau of morceaux) {
       new RegExp(`(sed|perl)\\s+[^#]*(-i|--in-place)[^#]*\\s["']?${chemin}`).test(morceau) ||
       new RegExp(`\\bgit\\s+(rm|mv)\\s[^#]*${chemin}`).test(morceau);
     if (ecritFichierReserve) {
-      refuser('cette commande modifie un fichier reserve a Nicolas (garde-fous, tests, configuration). Seuls src/ et public/ sont modifiables. Si la demande du client l\'exige, lancer /alerter-nicolas.');
+      refuser('cette commande modifie un fichier reserve a Nicolas (garde-fous, tests, configuration). Seuls src/ et public/ sont modifiables. Si la demande du client l\'exige, lancer /prevenir-nicolas.');
     }
   }
 }

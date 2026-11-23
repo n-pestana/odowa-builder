@@ -26,7 +26,7 @@ Chacun a une raison. Si tu penses qu'un de ces choix est la cause d'un problème
 6. **Le client ne modifie que `src/` et `public/`.** Le reste est protégé par le garde-fou (local) et `CODEOWNERS` (GitHub), et c'est exactement ce que la mise à jour du gabarit remplace.
 7. **Le contrôle obligatoire s'appelle `controles`**, à l'identique dans `dev.yml`, `controles.yml`, `outils/github.sh` et `gabarit/scripts/outils/lib.mjs`.
 8. **Les commandes sont des `SKILL.md` courts ; la logique est dans des scripts déterministes.**
-9. **L'autorisation de mise en prod (le jeton)** est créée par la ligne d'injection en tête de `mise-en-prod/SKILL.md` et vérifiée par `prod.mjs`. Dans un dépôt client, le garde-fou t'interdit de la créer toi-même, y compris en maintenance : quand une étape demande une mise en prod, **demande à Nicolas de taper la commande**.
+9. **L'autorisation de mise en prod (le jeton)** est créée par la ligne d'injection en tête de `publier/SKILL.md` et vérifiée par `prod.mjs`. Dans un dépôt client, le garde-fou t'interdit de la créer toi-même, y compris en maintenance : quand une étape demande une mise en prod, **demande à Nicolas de taper la commande**.
 10. **Secrets posés avant le premier push** dans `nouveau-client.sh`, pour que les premiers déploiements d'un client soient verts.
 
 ## 4. Règles propres à cette mission
@@ -77,11 +77,11 @@ Ne passe à la suivante que si le critère de fin est atteint, ou si Nicolas te 
 
 Dans un clone du dépôt du pilote, lancé avec `GABARIT_MAINTENANCE=1 claude`, avec Nicolas qui tape les commandes réservées :
 
-1. Une modification dans `src/`, puis `/apercu`.
-2. `/mise-en-prod` : préparation, contrôles, confirmation, fusion, vérification du site réel.
+1. Une modification dans `src/`, puis `/voir`.
+2. `/publier` : préparation, contrôles, confirmation, fusion, vérification du site réel.
 3. Dans le journal de `prod.yml`, `apres-deploiement.mjs` est vert, formulaire compris, et le mail de test arrive.
-4. `/retour-en-arriere`, puis de nouveau `/mise-en-prod` : les modifications reviennent en ligne.
-5. `/alerter-nicolas` : le ticket est créé et Nicolas est notifié.
+4. `/annuler-publication`, puis de nouveau `/publier` : les modifications reviennent en ligne.
+5. `/prevenir-nicolas` : le ticket est créé et Nicolas est notifié.
 6. Une PR qui ne touche que `src/` est fusionnable sans approbation ; une PR qui touche `scripts/` attend celle de Nicolas.
 7. Avec l'accord de Nicolas, provoque un échec de la vérification après déploiement (jeton de test volontairement faux) : le ticket d'alerte automatique doit être créé. Remets la bonne valeur.
 

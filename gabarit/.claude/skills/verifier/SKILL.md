@@ -7,7 +7,7 @@ allowed-tools: Bash(npm run build) Bash(npm run check) Bash(node scripts/outils/
 Vérifie le site sans rien mettre en ligne.
 
 1. Lance `npm run build`, puis `npm run check`. Ce sont les contrôles de contenu : titres, descriptions, liens, images, référencement.
-2. Lance `node scripts/outils/etat.mjs` et lis la ligne « Contrôles automatiques » du site de test. Ces contrôles tournent sur GitHub et couvrent en plus l'affichage dans un navigateur et le formulaire de contact. Ils portent sur **ce qui a été envoyé par le dernier `/apercu`**, pas sur les modifications faites depuis.
+2. Lance `node scripts/outils/etat.mjs` et lis la ligne « Contrôles automatiques » du site de test. Ces contrôles tournent sur GitHub et couvrent en plus l'affichage dans un navigateur et le formulaire de contact. Ils portent sur **ce qui a été envoyé par le dernier `/voir`**, pas sur les modifications faites depuis.
 
 Rends un rapport en trois catégories, sans enjoliver :
 

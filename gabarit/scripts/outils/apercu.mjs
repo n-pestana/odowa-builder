@@ -1,4 +1,4 @@
-// /apercu : enregistre les modifications et les envoie sur le site de TEST.
+// /voir : enregistre les modifications et les envoie sur le site de TEST.
 // Ne touche jamais le site en ligne.
 //   node scripts/outils/apercu.mjs --message "Ce qui a change, en une phrase"
 //   node scripts/outils/apercu.mjs suivre      (attend la fin de la publication)
@@ -61,7 +61,7 @@ if (gitEssai('merge-base', '--is-ancestor', `origin/${DEV}`, 'HEAD') === null) {
     gitEssai('rebase', '--abort');
     arreter(
       'BLOQUE : le site de test a ete modifie par ailleurs et les deux versions ne se melangent pas toutes seules.\n' +
-        'Rien n\'a ete envoye, rien n\'est perdu. Lancer /alerter-nicolas.',
+        'Rien n\'a ete envoye, rien n\'est perdu. Lancer /prevenir-nicolas.',
     );
   }
 }

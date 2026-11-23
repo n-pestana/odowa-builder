@@ -1,4 +1,4 @@
-// /annuler-modifs : remet le site de TEST dans l'etat du site en ligne.
+// /recommencer : remet le site de TEST dans l'etat du site en ligne.
 // Rien n'est efface de l'historique : Nicolas peut retrouver ce qui a ete annule.
 //   node scripts/outils/annuler-modifs.mjs              (montre ce qui serait annule)
 //   node scripts/outils/annuler-modifs.mjs --confirmer  (le fait)

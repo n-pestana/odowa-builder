@@ -13,6 +13,6 @@ Résume ensuite le résultat au client en 3 à 6 lignes, en français courant :
 3. Quand a eu lieu la dernière mise en ligne, et s'est-elle bien passée ?
 4. Les contrôles automatiques sont-ils verts ?
 
-Si la sortie contient « ANORMAL », « ROUGE » ou « injoignable », dis-le clairement et propose la suite (corriger, ou `/alerter-nicolas`).
+Si la sortie contient « ANORMAL », « ROUGE » ou « injoignable », dis-le clairement et propose la suite (corriger, ou `/prevenir-nicolas`).
 
 Ne recopie pas la sortie brute, sauf si le client la demande.
