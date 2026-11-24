@@ -166,3 +166,12 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
 
   Faite sur le pilote depuis un clone le 24/11/2026.
 - **Prochaine étape** : quand il y aura plusieurs clients, des migrations numérotées appliquées par `mettre-a-jour-client.sh` au contenu d'un client resté sur une version ancienne. Elles serviront aussi au piège 13.
+
+### 15. Une migration de `src/` entre en collision avec une session client ouverte
+
+- **Vécu** (pilote, 24/11/2026) : une session cloud faisait la refonte complète du site (Tymea Formation) pendant la migration vers le noyau, qui réécrivait `Base.astro` et `contact.astro`. `/voir` a refusé de mélanger (« BLOQUE »), rien n'a été perdu (branche `claude/…` poussée), et la session a ouvert le ticket #14.
+- **Cause** : une mise à jour normale ne touche pas `src/`, mais une migration, si. Une session ouverte travaille sur l'ancienne version.
+- **Réflexe** :
+  - avant une migration, chercher les branches `claude/…` récentes et les sessions en cours (tickets, `gh api repos/DEPOT/branches`) ;
+  - en cas de collision, rejouer la branche de la session sur `dev` dans une copie de travail (`git worktree`), adapter, contrôler, pousser en avance rapide ;
+  - puis faire **ouvrir une nouvelle session** au client : l'ancienne garde la version d'avant et rebuterait sur le même conflit.
