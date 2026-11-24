@@ -21,10 +21,16 @@ const enTetes = {
   hooks: { 'astro:build:done': ({ dir }) => writeFileSync(new URL('_headers', dir), EN_TETES) },
 };
 
+// robots.txt vient du noyau (reserve, mis a jour chez les clients), pas de src/pages/.
+const robots = {
+  name: 'robots-du-noyau',
+  hooks: { 'astro:config:setup': ({ injectRoute }) => injectRoute({ pattern: '/robots.txt', entrypoint: './noyau/robots.txt.js' }) },
+};
+
 export default defineConfig({
   // L'URL de prod sert aux canonical et au sitemap, y compris sur le site dev.
   site: config.urlProd,
   trailingSlash: 'always',
   build: { format: 'directory' },
-  integrations: [sitemap({ filter: (page) => !page.includes('/404') }), enTetes],
+  integrations: [sitemap({ filter: (page) => !page.includes('/404') }), enTetes, robots],
 });

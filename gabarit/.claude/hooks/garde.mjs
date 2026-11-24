@@ -27,7 +27,7 @@ try {
 
 // Le client ne modifie que le contenu et la presentation du site.
 const DOSSIERS_LIBRES = ['src/', 'public/'];
-const RESERVES = ['.claude/', '.github/', 'scripts/', 'tests/', 'functions/', 'site.config.json', 'CLAUDE.md', 'playwright.config.js', 'astro.config.mjs', 'package.json', 'package-lock.json', '.dev.vars', '.nvmrc'];
+const RESERVES = ['.claude/', '.github/', 'noyau/', 'scripts/', 'tests/', 'functions/', 'site.config.json', 'CLAUDE.md', 'playwright.config.js', 'astro.config.mjs', 'package.json', 'package-lock.json', '.dev.vars', '.nvmrc'];
 
 function refuser(raison) {
   console.error(`REFUSE par le garde-fou du site : ${raison}`);

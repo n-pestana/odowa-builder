@@ -94,6 +94,11 @@ function controlerTout({ dossier, urlProd, mode, sources, pagesEnLigne }) {
     const est404 = page === '/404.html';
     const html = parse(readFileSync(fichier, 'utf8'));
 
+    // Le noyau (noyau/Page.astro) produit l'en-tete de chaque page : referencement, site de test.
+    if (html.querySelector('meta[name="noyau"]')?.getAttribute('content') !== 'odowa-builder') {
+      signaler('noyau', page, 'La page ne passe pas par le noyau (noyau/Page.astro, via src/layouts/Base.astro).');
+    }
+
     if (!html.querySelector('html')?.getAttribute('lang')) {
       signaler('langue', page, 'La balise <html> n\'a pas d\'attribut lang.');
     }
@@ -183,10 +188,11 @@ function controlerTout({ dossier, urlProd, mode, sources, pagesEnLigne }) {
       }
     }
 
-    // JavaScript : seulement les donnees structurees, et le formulaire de la page Contact.
+    // JavaScript : seulement les donnees structurees, et le formulaire du noyau (<Formulaire />).
+    const avecFormulaire = Boolean(html.querySelector('form#formulaire-contact'));
     for (const script of html.querySelectorAll('script')) {
       if (script.getAttribute('type') === 'application/ld+json') continue;
-      if (page !== '/contact/') signaler('scripts', page, 'Script sur une page sans formulaire : le site reste sans JavaScript, sauf le formulaire de contact.');
+      if (!avecFormulaire) signaler('scripts', page, 'Script sur une page sans formulaire : le site reste sans JavaScript, sauf le formulaire de contact.');
     }
 
     // Accessibilite : champs de formulaire avec un libelle, liens avec un texte qui dit ou ils menent.

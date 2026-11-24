@@ -73,6 +73,17 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 - **Cause** : `git diff --name-status` détecte les renommages (`R` + taux de ressemblance), que la traduction ne connaissait pas.
 - **Réflexe** : `--no-renames` dans `prod.mjs`, `etat.mjs` et `annuler-modifs.mjs`. Un renommage s'affiche comme une suppression plus un ajout.
 
+### 13. L'outil ne vit pas dans `src/`
+
+- **Vécu** : `src/layouts/Base.astro` contenait à la fois l'habillage du client et l'outil (balises pour Google, `noindex` du site de test, données structurées, bandeau du site de test). S'y ajoutaient `src/pages/robots.txt.js` et le script du formulaire dans `contact.astro`. Comme `src/` appartient au client et n'est jamais mis à jour, aucune correction de ces éléments n'atteignait les clients existants : le nouveau bandeau n'est jamais arrivé chez le pilote.
+- **Cause** : la convention d'Astro range les gabarits de page dans `src/layouts/`.
+- **Réflexe** : tout ce dont dépendent le référencement, l'indexation, le site de test ou le formulaire va dans `noyau/` (réservé, mis à jour) :
+  - `noyau/Page.astro`, que `Base.astro` appelle ;
+  - `noyau/Formulaire.astro`, placé par `<Formulaire />` ;
+  - `noyau/robots.txt.js`, déclaré par `astro.config.mjs`.
+
+  Le contrôle `[noyau]` refuse une page qui n'y passe pas. `src/` ne garde que ce que le client peut changer sans risque.
+
 ## Les commandes
 
 | Commande client | Script | Touche le site en ligne |

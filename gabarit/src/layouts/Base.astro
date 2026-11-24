@@ -1,74 +1,35 @@
 ---
-// Gabarit commun a toutes les pages. Les pages Markdown passent leurs
-// informations par "frontmatter", les pages .astro par des proprietes.
+// L'habillage du site : en-tete, menu, pied de page, couleurs. Appartient au client.
+// Le document HTML (balises pour Google, site de test) vient du noyau : noyau/Page.astro.
+// Les pages Markdown passent leurs informations par "frontmatter", les pages .astro par des proprietes.
+import Page from '../../noyau/Page.astro';
 import entreprise from '../donnees/entreprise.json';
 
-const infos = Astro.props.frontmatter ?? Astro.props;
-const { title, description, indexable = true } = infos;
-
-const estDev = import.meta.env.PUBLIC_ENV === 'dev';
-const version = import.meta.env.PUBLIC_VERSION ?? 'local';
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
-
-const donneesStructurees = {
-  '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: entreprise.nom,
-  description: entreprise.activite,
-  url: Astro.site?.href,
-  telephone: entreprise.telephone,
-  email: entreprise.email,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: entreprise.adresse.rue,
-    postalCode: entreprise.adresse.codePostal,
-    addressLocality: entreprise.adresse.ville,
-    addressCountry: entreprise.adresse.pays,
-  },
-};
+const { title, description, indexable = true } = Astro.props.frontmatter ?? Astro.props;
 ---
 
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    {(estDev || !indexable) && <meta name="robots" content="noindex, nofollow" />}
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
-    <meta name="version" content={version} />
-    <script type="application/ld+json" set:html={JSON.stringify(donneesStructurees)} />
-  </head>
-  <body>
-    {estDev && <p class="bandeau-dev"><strong>🧪 Site de test</strong> · vos visiteurs ne voient pas cette version. Elle sera en ligne quand vous taperez /publier.</p>}
-    <header class="entete">
-      <a class="marque" href="/">{entreprise.nom}</a>
-      <nav aria-label="Menu principal">
-        <ul>
-          {entreprise.menu.map((entree) => (
-            <li><a href={entree.lien}>{entree.titre}</a></li>
-          ))}
-        </ul>
-      </nav>
-    </header>
-    <main>
-      <slot />
-    </main>
-    <footer class="pied">
-      <p>
-        {entreprise.nom} · {entreprise.adresse.rue}, {entreprise.adresse.codePostal}{' '}
-        {entreprise.adresse.ville} · <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a>
-      </p>
-      <p><a href="/mentions-legales/">Mentions légales</a></p>
-    </footer>
-  </body>
-</html>
+<Page title={title} description={description} indexable={indexable}>
+  <header class="entete">
+    <a class="marque" href="/">{entreprise.nom}</a>
+    <nav aria-label="Menu principal">
+      <ul>
+        {entreprise.menu.map((entree) => (
+          <li><a href={entree.lien}>{entree.titre}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <slot />
+  </main>
+  <footer class="pied">
+    <p>
+      {entreprise.nom} · {entreprise.adresse.rue}, {entreprise.adresse.codePostal}{' '}
+      {entreprise.adresse.ville} · <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a>
+    </p>
+    <p><a href="/mentions-legales/">Mentions légales</a></p>
+  </footer>
+</Page>
 
 <style is:global>
   :root {
@@ -90,18 +51,6 @@ const donneesStructurees = {
   }
   a {
     color: var(--couleur-accent);
-  }
-  .bandeau-dev {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    margin: 0;
-    padding: 0.5rem 1rem;
-    text-align: center;
-    font-size: 0.9rem;
-    background: #fff3cd;
-    color: #5c4400;
-    border-bottom: 1px solid #f0d78c;
   }
   .entete,
   main,
@@ -171,10 +120,6 @@ const donneesStructurees = {
     border: 0;
     border-radius: 6px;
     cursor: pointer;
-  }
-  .piege {
-    position: absolute;
-    left: -9999px;
   }
   .message-formulaire {
     padding: 0.8rem 1rem;

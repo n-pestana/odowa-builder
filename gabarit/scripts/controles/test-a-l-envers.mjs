@@ -111,6 +111,11 @@ const sabotages = [
     attendu: { controle: 'donnees-structurees', page: '/' },
     appliquer: (d) => modifier(d, 'index.html', (h) => h.replace('<script type="application/ld+json">{', '<script type="application/ld+json">{,')),
   },
+  {
+    nom: 'page qui ne passe pas par le noyau',
+    attendu: { controle: 'noyau', page: '/prestations/' },
+    appliquer: (d) => modifier(d, 'prestations/index.html', (h) => h.replace(/<meta name="noyau"[^>]*>/, '')),
+  },
   // --- Bonnes methodes de construction ---
   {
     nom: 'adresse de page avec majuscules et souligne',

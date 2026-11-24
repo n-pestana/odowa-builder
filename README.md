@@ -154,3 +154,14 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
 - **Vécu** (simulation sur une copie du pilote, contrôles « bonnes méthodes ») : le gabarit corrigé était vert, mais le contenu du pilote, copié de l'ancien gabarit, était rouge. Il contenait `en panne :` avec une espace ordinaire, et l'adresse écrite en dur dans `mentions-legales.md`. `mettre-a-jour-client.sh` refuse alors de pousser (« contenu non compatible »), comme prévu.
 - **Cause** : `src/` appartient au client. La mise à jour ne le touche jamais, donc un contrôle plus strict s'applique à un contenu ancien.
 - **Réflexe** : avant de diffuser un nouveau contrôle, simuler sur une copie de chaque client (`cp -r` d'un clone, puis `mettre-a-jour-client.sh --simulation`, `npm run build`, `npm run check`). Corriger d'abord le **contenu** chez le client, de préférence depuis sa session (« corrige ce que les contrôles signalent »), publier, puis diffuser. Ne jamais assouplir le contrôle pour faire passer un client.
+
+### 14. Une partie de l'outil vivait dans `src/`, chez le client
+
+- **Vécu** : la mise à jour n'atteignait ni le bandeau du site de test, ni les balises pour Google, ni `robots.txt`, ni le script du formulaire, tous rangés dans `src/`.
+- **Correction** : le noyau `gabarit/noyau/` (voir `gabarit/README.md`, piège 13). Chaque client existant a besoin d'une **migration unique** de son `src/` :
+  - `Base.astro` devient l'habillage qui appelle `<Page>` du noyau ;
+  - `contact.astro` utilise `<Formulaire />` ;
+  - `src/pages/robots.txt.js` est supprimé (sinon deux routes `/robots.txt`).
+
+  Faite sur le pilote depuis un clone le 24/11/2026.
+- **Prochaine étape** : quand il y aura plusieurs clients, des migrations numérotées appliquées par `mettre-a-jour-client.sh` au contenu d'un client resté sur une version ancienne. Elles serviront aussi au piège 13.

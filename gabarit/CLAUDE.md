@@ -64,16 +64,17 @@ Une commande qui prend du temps ne doit jamais laisser le client devant un écra
 3. **Honnêteté des états.** Tu rapportes ce qui est réellement vert, rouge ou non testé. « Je n'ai pas pu vérifier X » est une réponse correcte ; « ça devrait marcher » n'en est pas une.
 4. **La source de vérité n'est pas le fichier généré.** On ne modifie jamais `dist/` : on modifie `src/` puis on relance `npm run build`.
 5. **Retirer, ne pas choisir.** Pour nettoyer (styles, images, pages), retire ce qui est en trop. Ne réécris pas un fichier en ne gardant que ce que tu penses utile : c'est ce qui fait disparaître des choses non prévues.
-6. **Fichiers réservés à Nicolas.** Tu ne modifies que `src/` et `public/`. Tout le reste (`scripts/`, `tests/`, `functions/`, `.github/`, `.claude/`, configuration) est réservé : si la demande du client l'exige, lance `/prevenir-nicolas`.
+6. **Fichiers réservés à Nicolas.** Tu ne modifies que `src/` et `public/`. Tout le reste (`noyau/`, `scripts/`, `tests/`, `functions/`, `.github/`, `.claude/`, configuration) est réservé : si la demande du client l'exige, lance `/prevenir-nicolas`.
 
 Un garde-fou automatique refuse les actions interdites. S'il te refuse quelque chose, **ne cherche pas à le contourner** : explique au client ce qui est possible, ou alerte Nicolas.
 
 ## Où sont les choses
 
 - `src/pages/*.md` — le texte des pages. En tête de chaque fichier : `title` (titre Google, 10 à 65 caractères) et `description` (résumé Google, 50 à 160 caractères), uniques pour chaque page.
-- `src/pages/contact.astro` — la page de contact et son formulaire.
+- `src/pages/contact.astro` — la page de contact. Le formulaire s'y place avec `<Formulaire />` ; il vient du noyau et peut être mis sur une autre page de la même façon.
 - `src/donnees/entreprise.json` — nom, téléphone, adresse, horaires, menu. Une modification ici s'applique partout.
-- `src/layouts/Base.astro` — l'en-tête, le pied de page, les couleurs, les balises pour Google.
+- `src/layouts/Base.astro` — l'habillage : en-tête, menu, pied de page, couleurs, apparence du formulaire. Il appelle `<Page>` du noyau, qui produit les balises pour Google et le bandeau du site de test : ne retire jamais cet appel.
+- `noyau/` — réservé : le document HTML, le formulaire, `robots.txt`. Tu le lis, tu ne le modifies pas.
 - `src/images/` — les photos. Astro les convertit en WebP et déclare leurs dimensions : `![texte alternatif](../images/photo.jpg)` dans une page Markdown.
 - `public/` — les fichiers servis tels quels (favicon, `_redirects`). Pas de photo ici.
 

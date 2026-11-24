@@ -1,0 +1,75 @@
+---
+// NOYAU (reserve a Nicolas, mis a jour chez les clients) : le document HTML complet.
+// Tout ce dont dependent le referencement, l'indexation et le site de test est ici,
+// pas dans src/ (qui appartient au client et n'est jamais mis a jour).
+// Le client habille la page dans src/layouts/Base.astro, qui appelle <Page>.
+import entreprise from '../src/donnees/entreprise.json';
+
+interface Props {
+  title: string;
+  description: string;
+  indexable?: boolean;
+}
+const { title, description, indexable = true } = Astro.props;
+
+const estDev = import.meta.env.PUBLIC_ENV === 'dev';
+const version = import.meta.env.PUBLIC_VERSION ?? 'local';
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+
+const donneesStructurees = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: entreprise.nom,
+  description: entreprise.activite,
+  url: Astro.site?.href,
+  telephone: entreprise.telephone,
+  email: entreprise.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: entreprise.adresse.rue,
+    postalCode: entreprise.adresse.codePostal,
+    addressLocality: entreprise.adresse.ville,
+    addressCountry: entreprise.adresse.pays,
+  },
+};
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {(estDev || !indexable) && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="version" content={version} />
+    <meta name="noyau" content="odowa-builder" />
+    <script type="application/ld+json" set:html={JSON.stringify(donneesStructurees)} />
+  </head>
+  <body>
+    {estDev && <p class="bandeau-dev"><strong>🧪 Site de test</strong> · vos visiteurs ne voient pas cette version. Elle sera en ligne quand vous taperez /publier.</p>}
+    <slot />
+  </body>
+</html>
+
+<style>
+  .bandeau-dev {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: 0;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    font-family: system-ui, sans-serif;
+    background: #fff3cd;
+    color: #5c4400;
+    border-bottom: 1px solid #f0d78c;
+  }
+</style>
