@@ -88,6 +88,13 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 
 Les commandes sont des fichiers `SKILL.md` courts dans `.claude/skills/`. La logique est dans les scripts, qui sont déterministes : Claude orchestre, il n'improvise pas les opérations git.
 
+**Les contrôles de construction.** En plus du référencement, `npm run check` vérifie les bonnes méthodes listées dans `CLAUDE.md`, « Comment on construit » :
+- `ssot` et `couleurs` (sur `src/`) ;
+- `scripts`, `ressources-externes`, `adresses`, `niveaux-titres`, `orphelines`, `redirections` (comparaison avec `origin/main`, « non vérifié » si la branche est absente) ;
+- `formulaire-libelles`, `liens-texte`, `liens-externes`, `images-dimensions`, `images-format`, `poids-page`, `typographie`, `en-tetes`, `secrets`.
+
+Chacun a son sabotage, et les bonnes méthodes ont leur cas autorisé dans `check:envers`. Les en-têtes de sécurité (CSP, etc.) sont produits par `astro.config.mjs` dans `dist/_headers`, pas dans `public/` : ainsi, ils sont mis à jour chez les clients.
+
 **La carte d'état.** Chaque réponse utile au client se termine par la sortie de `node scripts/outils/etat.mjs --carte`, recopiée telle quelle (`CLAUDE.md`). Les couleurs (🟢 🟡 ⏳ 🔴 ⚪) sont décidées par `scripts/outils/carte.mjs`, une fonction pure, jamais par Claude. Règle : une donnée inconnue donne ⚪, jamais 🟢. `scripts/controles/test-carte.mjs` le vérifie sur 17 situations, lancé par `npm run check:hook`.
 
 **Renommer une commande.** Le nom apparaît dans le dossier du `SKILL.md`, son `name:`, l'autorisation (`jeton.mjs`, `PREFIXES` de `prod.mjs`) pour les deux commandes qui touchent le site en ligne, et la documentation. `npm run check:hook` refuse toute commande citée sans `SKILL.md` et toute autorisation incohérente. L'ancien dossier disparaît chez le client à la mise à jour suivante.

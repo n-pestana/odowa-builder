@@ -148,3 +148,9 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
 - **Cause** : aucun mécanisme documenté ne fait parler Claude en premier dans une session cloud ([hooks](https://code.claude.com/docs/en/hooks.md), [sessions cloud](https://code.claude.com/docs/en/claude-code-on-the-web.md)).
 - **Contournement** : un favori `https://claude.ai/code?repositories=PROPRIETAIRE/site-ID&prompt=Bonjour`. Constaté le 23/11/2026 : le dépôt est choisi et « Bonjour » est pré-rempli, **sans envoi** ; le client appuie sur Entrée et l'accueil s'affiche. Ces paramètres **ne sont pas documentés** par Anthropic : ils peuvent cesser de marcher sans prévenir. `nouveau-client.sh` affiche le lien.
 - **Réflexe** : si un client dit « le lien n'ouvre plus mon site », vérifier le favori soi-même. En repli, il ouvre claude.ai/code, choisit son site et écrit directement ce qu'il veut changer : l'accueil arrive en tête de la réponse.
+
+### 13. Un nouveau contrôle peut bloquer la mise à jour d'un client existant
+
+- **Vécu** (simulation sur une copie du pilote, contrôles « bonnes méthodes ») : le gabarit corrigé était vert, mais le contenu du pilote, copié de l'ancien gabarit, était rouge. Il contenait `en panne :` avec une espace ordinaire, et l'adresse écrite en dur dans `mentions-legales.md`. `mettre-a-jour-client.sh` refuse alors de pousser (« contenu non compatible »), comme prévu.
+- **Cause** : `src/` appartient au client. La mise à jour ne le touche jamais, donc un contrôle plus strict s'applique à un contenu ancien.
+- **Réflexe** : avant de diffuser un nouveau contrôle, simuler sur une copie de chaque client (`cp -r` d'un clone, puis `mettre-a-jour-client.sh --simulation`, `npm run build`, `npm run check`). Corriger d'abord le **contenu** chez le client, de préférence depuis sa session (« corrige ce que les contrôles signalent »), publier, puis diffuser. Ne jamais assouplir le contrôle pour faire passer un client.

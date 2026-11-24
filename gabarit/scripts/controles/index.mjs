@@ -8,6 +8,7 @@
 //
 // REGLE : tout controle ajoute ici doit avoir son sabotage dans test-a-l-envers.mjs.
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +16,14 @@ import { parse } from 'node-html-parser';
 
 const RACINE = fileURLToPath(new URL('../../', import.meta.url));
 const POIDS_MAX_IMAGE = 400 * 1024;
+const POIDS_MAX_PAGE = 1024 * 1024; // HTML + CSS + JS + images d'une page
 const EXTENSIONS_IMAGE = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
+// Seul domaine exterieur admis : le captcha du formulaire (Cloudflare, deja hebergeur du site).
+const DOMAINES_ADMIS = ['challenges.cloudflare.com'];
+const LIENS_VAGUES = ['cliquez ici', 'ici', 'lire la suite', 'en savoir plus', 'plus', 'lien', 'voir'];
+// Motifs de secrets connus. Le secret n'est jamais affiche, seulement le fichier.
+const SECRETS = /\bre_[A-Za-z0-9_]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|\bghp_[A-Za-z0-9]{30,}|\bgithub_pat_[A-Za-z0-9_]{30,}|\bsk_live_[A-Za-z0-9]{20,}/;
+const EN_TETES_OBLIGATOIRES = ['Content-Security-Policy', 'X-Content-Type-Options', 'Referrer-Policy', 'X-Frame-Options'];
 
 function listerFichiers(dossier) {
   return readdirSync(dossier, { withFileTypes: true }).flatMap((entree) => {
@@ -38,14 +46,32 @@ function cibleExiste(dossier, lien) {
   return (existsSync(base) && statSync(base).isFile()) || existsSync(join(base, 'index.html'));
 }
 
-export function controler({ dossier, urlProd, mode = 'prod', seulement = null }) {
-  const resultat = controlerTout({ dossier, urlProd, mode });
+// Adresse d'une page a partir de son fichier source : src/pages/a/b.md -> /a/b/ ; index -> /
+// null pour ce qui n'est pas une page (robots.txt.js, 404, pages dynamiques).
+export function adresseDuSource(fichier) {
+  const m = fichier.replace(/^src\/pages\//, '').match(/^(.*)\.(md|mdx|astro|html)$/);
+  if (!m || /(^|\/)(_|\[)/.test(m[1]) || m[1] === '404') return null;
+  const chemin = m[1].replace(/(^|\/)index$/, '');
+  return chemin === '' ? '/' : `/${chemin}/`;
+}
+
+const estExterne = (url) => /^(https?:)?\/\//i.test(url);
+const domaine = (url) => {
+  try {
+    return new URL(url, 'https://local.invalid').hostname;
+  } catch {
+    return '?';
+  }
+};
+
+export function controler({ dossier, urlProd, mode = 'prod', seulement = null, sources = null, pagesEnLigne = null }) {
+  const resultat = controlerTout({ dossier, urlProd, mode, sources, pagesEnLigne });
   if (!seulement) return resultat;
   // 'build' (dist/ absent) n'est jamais filtre : sans site construit, rien n'est controle.
   return { ...resultat, problemes: resultat.problemes.filter((p) => p.controle === 'build' || seulement.includes(p.controle)) };
 }
 
-function controlerTout({ dossier, urlProd, mode }) {
+function controlerTout({ dossier, urlProd, mode, sources, pagesEnLigne }) {
   const problemes = [];
   const signaler = (controle, page, detail) => problemes.push({ controle, page, detail });
 
@@ -60,6 +86,8 @@ function controlerTout({ dossier, urlProd, mode }) {
   const descriptions = new Map();
   const urlsCanoniques = [];
   const base = urlProd.replace(/\/$/, '');
+  const liensEntrants = new Map(); // page -> pages qui la citent
+  const toutesLesPages = [];
 
   for (const fichier of pagesHtml) {
     const page = cheminPage(dossier, fichier);
@@ -118,6 +146,105 @@ function controlerTout({ dossier, urlProd, mode }) {
       if (!cibleExiste(dossier, cible)) signaler('liens', page, `Lien interne casse : ${cible}`);
     }
 
+    if (!est404) toutesLesPages.push(page);
+    for (const lien of html.querySelectorAll('a[href]')) {
+      const cible = (lien.getAttribute('href') ?? '').split('#')[0].split('?')[0];
+      if (!cible.startsWith('/') || cible.startsWith('//') || cible === page) continue;
+      liensEntrants.set(cible, [...(liensEntrants.get(cible) ?? []), page]);
+    }
+
+    // Adresse de page : minuscules, chiffres et tirets (lisible, durable, bonne pour Google).
+    if (!est404 && !/^\/([a-z0-9]+(-[a-z0-9]+)*\/)*$/.test(page)) {
+      signaler('adresses', page, 'Adresse de page avec majuscules, accents, espaces ou soulignes : utiliser des minuscules et des tirets (ex. /nos-tarifs/).');
+    }
+
+    // Niveaux de titres : pas de saut (h2 puis h4).
+    let niveauPrecedent = 0;
+    for (const t of html.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+      const niveau = Number(t.tagName.slice(1));
+      if (niveau > niveauPrecedent + 1 && niveauPrecedent > 0) {
+        signaler('niveaux-titres', page, `Titre de niveau ${niveau} apres un niveau ${niveauPrecedent} : "${t.text.trim().slice(0, 50)}"`);
+      }
+      niveauPrecedent = niveau;
+    }
+
+    // Ressources exterieures : ni police, ni script, ni video chargee chez un tiers (RGPD, simplicite).
+    const ressources = html.querySelectorAll('script[src], link[href], iframe[src], img[src], source[src], source[srcset], video[src], audio[src], embed[src], object[data]');
+    for (const r of ressources) {
+      if (r.tagName === 'LINK' && /^(canonical|alternate|sitemap)$/i.test(r.getAttribute('rel') ?? '')) continue;
+      const url = r.getAttribute('src') ?? r.getAttribute('href') ?? r.getAttribute('data') ?? (r.getAttribute('srcset') ?? '').split(/\s/)[0];
+      if (estExterne(url) && !DOMAINES_ADMIS.includes(domaine(url))) {
+        signaler('ressources-externes', page, `Ressource chargee depuis ${domaine(url)} : la mettre sur le site, ou demander a Nicolas.`);
+      }
+    }
+    for (const bloc of html.querySelectorAll('style')) {
+      for (const m of bloc.text.matchAll(/(?:@import\s+(?:url\()?|url\()\s*["']?((?:https?:)?\/\/[^"')\s]+)/g)) {
+        if (!DOMAINES_ADMIS.includes(domaine(m[1]))) signaler('ressources-externes', page, `Style charge depuis ${domaine(m[1])}.`);
+      }
+    }
+
+    // JavaScript : seulement les donnees structurees, et le formulaire de la page Contact.
+    for (const script of html.querySelectorAll('script')) {
+      if (script.getAttribute('type') === 'application/ld+json') continue;
+      if (page !== '/contact/') signaler('scripts', page, 'Script sur une page sans formulaire : le site reste sans JavaScript, sauf le formulaire de contact.');
+    }
+
+    // Accessibilite : champs de formulaire avec un libelle, liens avec un texte qui dit ou ils menent.
+    const libelles = new Set(html.querySelectorAll('label[for]').map((l) => l.getAttribute('for')));
+    for (const champ of html.querySelectorAll('input, select, textarea')) {
+      if (/^(hidden|submit|button|reset)$/i.test(champ.getAttribute('type') ?? '')) continue;
+      let dansUnLabel = false;
+      for (let n = champ.parentNode; n; n = n.parentNode) if (n.tagName === 'LABEL') dansUnLabel = true;
+      const nomme = dansUnLabel || libelles.has(champ.getAttribute('id')) || champ.getAttribute('aria-label') || champ.getAttribute('aria-labelledby');
+      if (!nomme) signaler('formulaire-libelles', page, `Champ sans libelle : ${champ.getAttribute('name') ?? champ.tagName.toLowerCase()}`);
+    }
+    for (const lien of html.querySelectorAll('a[href]')) {
+      const texte = (lien.text.trim() || lien.getAttribute('aria-label') || lien.querySelector('img')?.getAttribute('alt') || '').trim();
+      if (!texte) signaler('liens-texte', page, `Lien sans texte : ${lien.getAttribute('href')}`);
+      else if (LIENS_VAGUES.includes(texte.toLowerCase().replace(/[.!…]+$/, ''))) {
+        signaler('liens-texte', page, `Lien au texte vague "${texte}" : dire ou il mene (ex. "voir nos tarifs").`);
+      }
+      if (lien.getAttribute('target') === '_blank' && !/\bnoopener\b/.test(lien.getAttribute('rel') ?? '')) {
+        signaler('liens-externes', page, `Lien qui ouvre un nouvel onglet sans rel="noopener" : ${lien.getAttribute('href')}`);
+      }
+    }
+
+    // Images : passees par Astro (WebP, dimensions declarees : la page ne saute pas au chargement).
+    for (const image of html.querySelectorAll('img')) {
+      const src = image.getAttribute('src') ?? '';
+      if (!image.getAttribute('width') || !image.getAttribute('height')) {
+        signaler('images-dimensions', page, `Image sans largeur ni hauteur declarees : ${src}. La mettre dans src/images/ (Astro les ajoute).`);
+      }
+      if (/\.(jpe?g|png)$/i.test(src.split('?')[0])) {
+        signaler('images-format', page, `Image en ${src.split('.').pop()} : la mettre dans src/images/, Astro la convertit en WebP.`);
+      }
+    }
+
+    // Poids de la page : HTML + fichiers locaux qu'elle charge.
+    let poids = statSync(fichier).size;
+    const charges = new Set(ressources.map((r) => r.getAttribute('src') ?? r.getAttribute('href') ?? '').filter((u) => u.startsWith('/') && !u.startsWith('//')));
+    for (const u of charges) {
+      const f = join(dossier, decodeURIComponent(u.split('?')[0]));
+      if (existsSync(f) && statSync(f).isFile()) poids += statSync(f).size;
+    }
+    if (poids > POIDS_MAX_PAGE) signaler('poids-page', page, `Page de ${Math.round(poids / 1024)} Ko avec ses fichiers (maximum : 1024 Ko).`);
+
+    // Typographie francaise : espace insecable avant : ; ! ? » et apres «.
+    // Fin de bloc = fin de phrase : on y ajoute une espace pour ne pas coller deux paragraphes.
+    const corps = parse((html.querySelector('body')?.innerHTML ?? '').replace(/<\/(p|li|h[1-6]|div|td|th|dt|dd|blockquote|section|article|header|footer|nav|main|label|button|option)>/gi, '$& '));
+    for (const n of corps.querySelectorAll('script, style, pre, code')) n.remove();
+    const texte = corps.text.replace(/[ \t\r\n]+/g, ' ');
+    const fautes = [
+      [/\S [;:!?»]/u, 'espace ordinaire avant la ponctuation : ecrire &nbsp;'],
+      [/\p{L}[;!?»](?= |$)/u, 'ponctuation collee au mot : ajouter &nbsp; avant'],
+      [/\p{L}:(?= |$)/u, 'deux-points colles au mot : ajouter &nbsp; avant'],
+      [/«(?:[ ]|\p{L})/u, 'guillemet « sans espace insecable apres'],
+    ];
+    for (const [motif, explication] of fautes) {
+      const m = texte.match(motif);
+      if (m) signaler('typographie', page, `${explication} : "…${texte.slice(Math.max(0, m.index - 20), m.index + 5).trim()}…"`);
+    }
+
     for (const bloc of html.querySelectorAll('script[type="application/ld+json"]')) {
       try {
         const donnees = JSON.parse(bloc.text);
@@ -161,6 +288,52 @@ function controlerTout({ dossier, urlProd, mode }) {
     if (mode === 'dev' && !bloqueTout) signaler('robots', '/robots.txt', 'Le robots.txt du site dev doit tout bloquer.');
   }
 
+  // Pages orphelines : chaque page est citee par au moins une autre (menu compris).
+  for (const page of toutesLesPages) {
+    if (page !== '/' && !liensEntrants.has(page)) signaler('orphelines', page, 'Aucune autre page ne fait de lien vers celle-ci : l\'ajouter au menu ou a une page.');
+  }
+
+  // En-tetes de securite (dist/_headers, produit par astro.config.mjs).
+  const fichierEnTetes = join(dossier, '_headers');
+  const enTetes = existsSync(fichierEnTetes) ? readFileSync(fichierEnTetes, 'utf8') : '';
+  for (const nom of EN_TETES_OBLIGATOIRES) {
+    if (!new RegExp(`^\\s+${nom}:`, 'mi').test(enTetes)) signaler('en-tetes', '/_headers', `En-tete de securite absent : ${nom}.`);
+  }
+
+  // Secrets : jamais dans le site publie.
+  for (const fichier of fichiers.filter((f) => /\.(html|js|css|txt|xml|json|map)$/.test(f) || /_headers|_redirects/.test(f))) {
+    if (SECRETS.test(readFileSync(fichier, 'utf8'))) signaler('secrets', cheminPage(dossier, fichier), 'Ce fichier contient ce qui ressemble a une cle secrete. Prevenir Nicolas.');
+  }
+
+  // Adresses durables : une page du site en ligne qui disparait garde une redirection.
+  if (pagesEnLigne) {
+    const redirections = existsSync(join(dossier, '_redirects')) ? readFileSync(join(dossier, '_redirects'), 'utf8') : '';
+    const redirigees = new Set(redirections.split('\n').map((l) => l.trim().split(/\s+/)[0]).filter(Boolean));
+    for (const ancienne of pagesEnLigne) {
+      if (toutesLesPages.includes(ancienne) || redirigees.has(ancienne) || redirigees.has(ancienne.replace(/\/$/, ''))) continue;
+      signaler('redirections', ancienne, `Page du site en ligne supprimee sans redirection : ajouter "${ancienne} /nouvelle-adresse/ 301" dans public/_redirects.`);
+    }
+  }
+
+  // Sources (src/) : une seule source pour les coordonnees, une seule pour les couleurs.
+  if (sources) {
+    const entreprise = JSON.parse(readFileSync(join(sources, 'donnees', 'entreprise.json'), 'utf8'));
+    const coordonnees = [entreprise.telephone, entreprise.telephoneAffiche, entreprise.email, entreprise.adresse?.rue].filter((v) => v && v.length >= 6);
+    for (const fichier of listerFichiers(sources).filter((f) => /\.(md|mdx|astro|html|js)$/.test(f))) {
+      const rel = 'src/' + relative(sources, fichier).split(sep).join('/');
+      const contenu = readFileSync(fichier, 'utf8');
+      for (const valeur of coordonnees) {
+        if (contenu.includes(valeur)) signaler('ssot', rel, `"${valeur}" ecrit en dur : le lire dans src/donnees/entreprise.json (une seule source).`);
+      }
+      if (rel !== 'src/layouts/Base.astro') {
+        const styles = [...contenu.matchAll(/<style[^>]*>([\s\S]*?)<\/style>|style="([^"]*)"/g)].map((m) => m[1] ?? m[2]).join('\n');
+        const couleur = styles.match(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/);
+        if (couleur) signaler('couleurs', rel, `Couleur ecrite en dur (${couleur[0]}…) : utiliser une variable var(--…) definie dans src/layouts/Base.astro.`);
+      }
+      if (SECRETS.test(contenu)) signaler('secrets', rel, 'Ce fichier contient ce qui ressemble a une cle secrete. Prevenir Nicolas.');
+    }
+  }
+
   for (const fichier of fichiers.filter((f) => EXTENSIONS_IMAGE.test(f))) {
     const poids = statSync(fichier).size;
     if (poids > POIDS_MAX_IMAGE) {
@@ -177,8 +350,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const mode = argMode ?? (process.env.PUBLIC_ENV === 'dev' ? 'dev' : 'prod');
   const seulement = process.argv.find((a) => a.startsWith('--seulement='))?.split('=')[1]?.split(',').filter(Boolean) ?? null;
   const config = JSON.parse(readFileSync(join(RACINE, 'site.config.json'), 'utf8'));
-  const { problemes, pages } = controler({ dossier: join(RACINE, 'dist'), urlProd: config.urlProd, mode, seulement });
+  // Pages du site en ligne, lues dans git (branche du site en ligne). Inconnues ici : non verifie, et on le dit.
+  let pagesEnLigne = null;
+  try {
+    pagesEnLigne = execFileSync('git', ['ls-tree', '-r', '--name-only', `origin/${config.brancheProd ?? 'main'}`, '--', 'src/pages'], { cwd: RACINE, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+      .split('\n').map(adresseDuSource).filter(Boolean);
+  } catch {
+    /* pas de branche du site en ligne ici */
+  }
+  const { problemes, pages } = controler({ dossier: join(RACINE, 'dist'), urlProd: config.urlProd, mode, seulement, sources: join(RACINE, 'src'), pagesEnLigne });
   const portee = seulement ? `, controles : ${seulement.join(', ')}` : '';
+  if (!pagesEnLigne && (!seulement || seulement.includes('redirections'))) console.log('NON VERIFIE - redirections : pages du site en ligne inconnues ici (pas de origin/main).');
 
   mkdirSync(join(RACINE, '.rapports'), { recursive: true });
   writeFileSync(

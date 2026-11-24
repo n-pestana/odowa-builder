@@ -74,7 +74,25 @@ Un garde-fou automatique refuse les actions interdites. S'il te refuse quelque c
 - `src/pages/contact.astro` — la page de contact et son formulaire.
 - `src/donnees/entreprise.json` — nom, téléphone, adresse, horaires, menu. Une modification ici s'applique partout.
 - `src/layouts/Base.astro` — l'en-tête, le pied de page, les couleurs, les balises pour Google.
-- `public/` — images et fichiers servis tels quels. Une image pèse 400 Ko maximum.
+- `src/images/` — les photos. Astro les convertit en WebP et déclare leurs dimensions : `![texte alternatif](../images/photo.jpg)` dans une page Markdown.
+- `public/` — les fichiers servis tels quels (favicon, `_redirects`). Pas de photo ici.
+
+## Comment on construit
+
+`npm run check` refuse ce qui est marqué *(contrôlé)* et nomme la page et la cause. Le reste est une consigne : personne ne la vérifie à ta place.
+
+- **Une seule source (SSOT).** Nom, téléphone, e-mail, adresse et horaires viennent de `src/donnees/entreprise.json`, jamais recopiés dans une page. Si une page Markdown doit les afficher, elle devient une page `.astro` qui lit ce fichier. *(contrôlé : téléphone, e-mail, rue)*
+- **Ne pas se répéter (DRY).** Un bloc qui revient sur deux pages devient un composant dans `src/composants/`. Les couleurs sont des variables CSS définies dans `src/layouts/Base.astro`. *(contrôlé : couleurs écrites en dur ; consigne : composants)*
+- **Rester simple (KISS, YAGNI).** Site statique : pas de JavaScript sauf le formulaire de contact, pas de bibliothèque, pas d'« amélioration » que le client n'a pas demandée. *(contrôlé : scripts ; consigne : le reste)*
+- **Rien chez un tiers (RGPD, sécurité).** Polices, images, vidéos et scripts sont sur le site lui-même. Pas de Google Fonts, pas de vidéo YouTube intégrée, pas de traceur. Seule exception : le captcha du formulaire. Si le client veut une vidéo, propose un lien vers elle, ou `/prevenir-nicolas`. *(contrôlé)*
+- **Référencement (SEO).** Titre et description uniques, un seul `#`, pas de niveau de titre sauté (`##` puis `####`), texte alternatif sur chaque image, adresses de page en minuscules avec tirets (`/nos-tarifs/`), chaque page reliée depuis au moins une autre. *(contrôlé)*
+- **Adresses durables.** Une page renommée ou supprimée qui existe sur le site en ligne garde une redirection dans `public/_redirects` : `/ancienne/ /nouvelle/ 301`. *(contrôlé)*
+- **Accessibilité.** Chaque champ de formulaire a un libellé ; chaque lien dit où il mène (jamais « cliquez ici ») ; un lien qui ouvre un nouvel onglet porte `rel="noopener"`. Contraste suffisant entre texte et fond. *(contrôlé, sauf le contraste : consigne)*
+- **Performance.** Photos dans `src/images/` (WebP, dimensions, chargement différé), 400 Ko maximum par image, 1 Mo maximum par page. *(contrôlé)*
+- **Typographie française.** Espace insécable avant `: ; ! ?` et à l'intérieur des « » : écris `&nbsp;` (`Horaires&nbsp;:`, `«&nbsp;Merci&nbsp;»`). *(contrôlé)*
+- **Contenu.** Phrases courtes, un appel à l'action clair par page (appeler, écrire, venir), le même ton partout. *(consigne)*
+- **Obligations légales.** Les mentions légales sont obligatoires et leur contenu est sous la responsabilité du client. Ne supprime jamais cette page. Si le client demande de la modifier, fais-le, et rappelle-lui une fois que l'exactitude des informations lui revient. *(consigne)*
+- **Secrets.** Aucune clé dans `src/` ni dans `public/`. *(contrôlé)*
 
 ## Boucle de travail
 

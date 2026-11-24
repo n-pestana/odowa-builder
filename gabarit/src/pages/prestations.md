@@ -8,7 +8,7 @@ description: Dépannage, installation de chaudières, entretien annuel et rénov
 
 ## Dépannage de plomberie
 
-Fuite, canalisation bouchée, chauffe-eau en panne : nous intervenons sous 24 heures.
+Fuite, canalisation bouchée, chauffe-eau en panne&nbsp;: nous intervenons sous 24 heures.
 
 ## Chaudières
 

@@ -19,6 +19,13 @@ runs:
         PUBLIC_ENV: prod
       run: npm run build
 
+    # Le contrôle [redirections] compare avec les pages du site en ligne : il lui faut origin/main.
+    - name: Récupérer la branche du site en ligne
+      shell: bash
+      run: |
+        BRANCHE="$(node -p "require('./site.config.json').brancheProd ?? 'main'")"
+        git fetch --no-tags --depth=1 origin "+refs/heads/$BRANCHE:refs/remotes/origin/$BRANCHE"
+
     - name: Contrôles de contenu et de référencement
       shell: bash
       run: npm run check
