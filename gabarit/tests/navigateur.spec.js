@@ -46,6 +46,33 @@ for (const page of pages) {
   });
 }
 
+// Mobile d'abord : sur telephone, chaque lien du menu doit etre dans l'ecran, tout de suite
+// ou apres un bouton de menu. Un menu qui deborde ou disparait sur telephone est refuse.
+test('sur téléphone, tout le menu est accessible', async ({ page: onglet }, infos) => {
+  test.skip(infos.project.name !== 'telephone', 'test propre au téléphone');
+  await onglet.goto('/');
+  const liens = onglet.locator('header nav a');
+  expect(await liens.count(), 'aucun lien dans le menu').toBeGreaterThan(0);
+  const horsEcran = () =>
+    liens.evaluateAll((elements) =>
+      elements
+        .filter((a) => {
+          const r = a.getBoundingClientRect();
+          const style = getComputedStyle(a);
+          return r.width === 0 || r.height === 0 || style.visibility === 'hidden' || r.left < 0 || r.right > window.innerWidth + 1;
+        })
+        .map((a) => a.textContent.trim()),
+    );
+  let manquants = await horsEcran();
+  if (manquants.length > 0) {
+    const bouton = onglet.locator('header summary, header button, header [aria-expanded]').first();
+    expect(await bouton.count(), `sur téléphone, liens du menu hors de l'écran (${manquants.join(', ')}) et aucun bouton de menu`).toBeGreaterThan(0);
+    await bouton.click();
+    manquants = await horsEcran();
+    expect(manquants, 'après le bouton de menu, des liens restent hors de l\'écran').toEqual([]);
+  }
+});
+
 test('le menu mène à des pages qui existent', async ({ page: onglet }) => {
   await onglet.goto('/');
   const liens = await onglet.locator('header nav a').evaluateAll((elements) => elements.map((a) => a.getAttribute('href')));

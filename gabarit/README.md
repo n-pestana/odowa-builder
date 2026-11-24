@@ -103,6 +103,11 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 - **Réflexe** : le gabarit ne contient qu'une page d'attente (accueil au nom du client, contact avec le formulaire, mentions légales). Tout est lu dans `entreprise.json`, dont les coordonnées sont vides tant que le client ne les a pas données. Le pied de page et les données structurées n'affichent que ce qui existe. `test-simulation.sh` vérifie qu'aucun contenu fictif n'arrive chez un nouveau client.
 - **Conséquence** : les contrôles et les tests ne supposent plus aucune page d'exemple. Les tests du formulaire cherchent la page qui porte `<Formulaire />`, et sont « sans objet » s'il n'y en a pas. Le contrôle des redirections ne tourne que dans un dépôt client.
 
+### 17. Un menu présent n'est pas un menu utilisable sur téléphone
+
+- **Vécu** (site Tymea du pilote, refonte faite en session) : sur téléphone, le menu défilait de côté. « Handicap », « Résultats » et « Contact » étaient hors de l'écran, sans bouton de menu. Les tests navigateur passaient, parce qu'ils vérifiaient seulement que le menu existait.
+- **Réflexe** : le test « sur téléphone, tout le menu est accessible » mesure chaque lien. Il doit être dans l'écran, tout de suite ou après un bouton de menu (`summary`, `button`, `aria-expanded`). La règle « Mobile d'abord » de `CLAUDE.md` impose des liens empilés ou un `<details>` sans JavaScript.
+
 ## Les commandes
 
 | Commande client | Script | Touche le site en ligne |
