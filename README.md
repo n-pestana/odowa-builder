@@ -175,3 +175,9 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
   - avant une migration, chercher les branches `claude/…` récentes et les sessions en cours (tickets, `gh api repos/DEPOT/branches`) ;
   - en cas de collision, rejouer la branche de la session sur `dev` dans une copie de travail (`git worktree`), adapter, contrôler, pousser en avance rapide ;
   - puis faire **ouvrir une nouvelle session** au client : l'ancienne garde la version d'avant et rebuterait sur le même conflit.
+
+### 16. Le site de test d'un nouveau client ne répond pas tout de suite
+
+- **Vécu** (numa-academy, 24/11/2026) : les deux premiers déploiements étaient verts et le site en ligne répondait, mais `https://dev.site-numa-academy.pages.dev` ne répondait pas du tout (curl : code 000). Après environ 1 minute, il a répondu 200.
+- **Cause probable, non vérifiée** : l'adresse `dev.` (alias de branche Cloudflare Pages) d'un projet neuf met un moment à exister.
+- **Réflexe** : attendre quelques minutes avant de conclure à un échec ou de donner l'adresse au client.
