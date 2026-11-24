@@ -182,3 +182,8 @@ Si une nouvelle version du gabarit ajoute un contrôle que le contenu d'un clien
 - **Vécu** (numa-academy, 24/11/2026) : les deux premiers déploiements étaient verts et le site en ligne répondait, mais `https://dev.site-numa-academy.pages.dev` ne répondait pas du tout (curl : code 000). Après environ 1 minute, il a répondu 200.
 - **Cause probable, non vérifiée** : l'adresse `dev.` (alias de branche Cloudflare Pages) d'un projet neuf met un moment à exister.
 - **Réflexe** : attendre quelques minutes avant de conclure à un échec ou de donner l'adresse au client.
+
+### 17. Un filtre `grep` masque l'échec d'un contrôle avant push
+
+- **Vécu** (24/11/2026, commit 373f90d) : `npm run check:hook 2>&1 | grep -E "ECHEC|VERT|ROUGE"` affichait « ROUGE », mais la chaîne `&&` a continué jusqu'au push, parce que le code de sortie était celui de `grep`. Le workflow de l'usine est passé au rouge. Corrigé par f0bd6d2.
+- **Réflexe** : avant push, `set -o pipefail`, ou des contrôles lancés sans filtre. Un contrôle filtré pour l'affichage ne doit jamais décider de la suite.
