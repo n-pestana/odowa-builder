@@ -142,7 +142,7 @@ export function incoherencesCommandes(racine) {
     ...commandes.map((c) => `.claude/skills/${c}/SKILL.md`),
     ...readdirSync(join(racine, 'scripts/outils')).filter((f) => f.endsWith('.mjs')).map((f) => `scripts/outils/${f}`)];
   for (const f of sources) {
-    for (const m of lire(f).matchAll(/(?<=^|[\s`«(])\/([a-z][a-z-]*[a-z])(?=$|[\s`».,;:)'"])/gm)) {
+    for (const m of lire(f).matchAll(/(?<=^|[\s`«(])\/([a-z][a-z-]*[a-z])(?=$|[\s`»,;:)'"]|\.(?![a-z]))/gm)) {
       if (!commandes.includes(m[1])) problemes.push(`${f} cite /${m[1]}, qui n'existe pas`);
     }
   }
@@ -158,6 +158,7 @@ rates += incoherences.length;
 const sabotages = [
   ['commande citee qui n\'existe pas', 'CLAUDE.md', (t) => t + '\nTapez `/mise-en-prod`.\n', '/mise-en-prod'],
   ['autorisation differente du nom de la commande', '.claude/skills/publier/SKILL.md', (t) => t.replaceAll('creer publier', 'creer mise-en-prod'), 'au lieu de'],
+  ['nom de fichier pris pour une commande (cas autorise)', 'CLAUDE.md', (t) => t + '\nLe plan du site est `/sitemap.xml`, la page `/contact/`.\n', null],
   ['autorisation inconnue de prod.mjs', 'scripts/outils/prod.mjs', (t) => t.replace("'prod/': 'publier'", "'prod/': 'mise-en-prod'"), 'inconnue de prod.mjs'],
 ];
 for (const [nom, fichierSabote, saboter, attendu] of sabotages) {
@@ -165,14 +166,15 @@ for (const [nom, fichierSabote, saboter, attendu] of sabotages) {
   cpSync(RACINE, copie, { recursive: true, filter: (s) => !/node_modules|[\\/]dist$|[\\/]\.git$/.test(s) });
   const cible = join(copie, fichierSabote);
   writeFileSync(cible, saboter(readFileSync(cible, 'utf8')));
-  const detecte = incoherencesCommandes(copie).some((p) => p.includes(attendu));
+  const problemes = incoherencesCommandes(copie);
   rmSync(copie, { recursive: true, force: true });
-  if (!detecte) rates += 1;
-  console.log(`${detecte ? 'OK    ' : 'ECHEC '} sabotage - ${nom}${detecte ? '' : ' : NON detecte'}`);
+  const ok = attendu === null ? problemes.length === 0 : problemes.some((p) => p.includes(attendu));
+  if (!ok) rates += 1;
+  console.log(`${ok ? 'OK    ' : 'ECHEC '} ${attendu === null ? 'autorise' : 'sabotage'} - ${nom}${ok ? '' : ` : ${attendu === null ? problemes.join(' ; ') : 'NON detecte'}`}`);
 }
 
 if (rates > 0) {
   console.log(`\nROUGE - ${rates} cas sur ${cas.length} ne se comportent pas comme prevu.`);
   process.exit(1);
 }
-console.log(`\nVERT - ${cas.length} cas du garde-fou conformes ; noms de commandes coherents ; 3 sabotages detectes.`);
+console.log(`\nVERT - ${cas.length} cas du garde-fou conformes ; noms de commandes coherents ; 3 sabotages detectes, 1 cas autorise.`);
