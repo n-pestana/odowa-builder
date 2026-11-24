@@ -17,6 +17,7 @@ odowa-builder/                  ce dépôt (privé, Nicolas seul)
 ├── secrets.env                 secrets communs, non versionné
 ├── INSTALLATION.md             mise en place de l'usine, puis d'un client
 ├── MISE-EN-ROUTE.md            liste de mise en route d'un client et mail de bienvenue
+├── TESTS-COMPTE-CLIENT.md      tache F : tests en session cloud avec un compte client
 └── BRIEF-MAINTENANCE.md        mission de validation, pour Claude Code
 ```
 

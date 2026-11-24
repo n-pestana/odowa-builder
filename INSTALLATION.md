@@ -117,7 +117,7 @@ Pour répéter à blanc, sans rien créer en ligne : ajoute `--simulation /tmp/e
 
 ## 3. Valider sur le premier client
 
-Crée un client pilote, puis déroule ces tests **dans une vraie session cloud, avec un compte client**, pas dans la tienne. Premier client : tous. Clients suivants : 1, 5, 6 et 9.
+Crée un client pilote, puis déroule ces tests **dans une vraie session cloud, avec un compte client**, pas dans la tienne. Marche à suivre pas à pas : `TESTS-COMPTE-CLIENT.md`. Sur le pilote, les sessions cloud ont tourné jusqu'ici avec ton compte (`n-pestana`, administrateur) : les tests 1, 3, 4, 8 et 13 ne sont donc **pas validés** avec un compte client. Premier client : tous. Clients suivants : 1, 5, 6 et 9.
 
 | N° | Test | Résultat attendu | Si ça échoue |
 |---|---|---|---|
