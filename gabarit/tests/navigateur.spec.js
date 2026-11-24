@@ -75,6 +75,37 @@ test('le formulaire refuse un envoi invalide', async ({ request }) => {
   expect((await reponse.json()).ok).toBe(false);
 });
 
+test('un message trop court est bloqué par la page, sans envoi', async ({ page: onglet }) => {
+  let envois = 0;
+  await onglet.route('**/api/contact', (route) => { envois += 1; return route.continue(); });
+  await onglet.goto('/contact/');
+  await onglet.getByLabel('Votre nom').fill('Test automatique');
+  await onglet.getByLabel('Votre e-mail').fill('test-automatique@example.com');
+  await onglet.getByLabel('Votre message').fill('test');
+  await onglet.getByRole('button', { name: 'Envoyer' }).click();
+  expect(await onglet.getByLabel('Votre message').evaluate((champ) => champ.validity.valid)).toBe(false);
+  await expect(onglet.locator('#message-formulaire')).toBeHidden();
+  expect(envois).toBe(0);
+});
+
+for (const [code, erreur, attendu] of [
+  [422, 'champs-invalides', /Vérifiez le formulaire/],
+  [403, 'captcha', /anti-robot/],
+]) {
+  test(`un refus corrigeable (${erreur}) explique quoi corriger`, async ({ page: onglet }) => {
+    await onglet.route('**/api/contact', (route) => route.fulfill({ status: code, contentType: 'application/json', body: JSON.stringify({ ok: false, erreur }) }));
+    await onglet.goto('/contact/');
+    await onglet.getByLabel('Votre nom').fill('Test automatique');
+    await onglet.getByLabel('Votre e-mail').fill('test-automatique@example.com');
+    await onglet.getByLabel('Votre message').fill('Ceci est un test automatique du formulaire.');
+    await onglet.getByRole('button', { name: 'Envoyer' }).click();
+    const message = onglet.locator('#message-formulaire');
+    await expect(message).toHaveAttribute('data-etat', 'erreur');
+    await expect(message).toHaveText(attendu);
+    await expect(message).not.toHaveText(/plus tard/);
+  });
+}
+
 test('le formulaire affiche une erreur quand l\'envoi échoue', async ({ page: onglet }) => {
   await onglet.route('**/api/contact', (route) => route.fulfill({ status: 502, contentType: 'application/json', body: '{"ok":false}' }));
   await onglet.goto('/contact/');
@@ -83,4 +114,5 @@ test('le formulaire affiche une erreur quand l\'envoi échoue', async ({ page: o
   await onglet.getByLabel('Votre message').fill('Ceci est un test automatique du formulaire.');
   await onglet.getByRole('button', { name: 'Envoyer' }).click();
   await expect(onglet.locator('#message-formulaire')).toHaveAttribute('data-etat', 'erreur');
+  await expect(onglet.locator('#message-formulaire')).toHaveText(/plus tard/);
 });

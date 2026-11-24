@@ -27,7 +27,7 @@ const cleCaptcha = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
   </label>
   <label>
     Votre message
-    <textarea name="message" rows="6" required></textarea>
+    <textarea name="message" rows="6" required minlength="5" maxlength="5000"></textarea>
   </label>
   <label class="piege" aria-hidden="true">
     Ne pas remplir ce champ
@@ -53,6 +53,7 @@ const cleCaptcha = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
     const bouton = formulaire.querySelector('button');
     bouton?.setAttribute('disabled', '');
     let reussi = false;
+    let erreur = '';
     try {
       const reponse = await fetch(formulaire.action, {
         method: 'POST',
@@ -61,12 +62,18 @@ const cleCaptcha = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
       });
       const resultat = await reponse.json().catch(() => ({}));
       reussi = reponse.ok && resultat.ok === true;
+      erreur = resultat.erreur ?? '';
     } catch {
       reussi = false;
     }
     message.hidden = false;
     message.dataset.etat = reussi ? 'succes' : 'erreur';
-    message.textContent = (reussi ? formulaire.dataset.merci : formulaire.dataset.erreur) ?? '';
+    // Un refus que le visiteur peut corriger lui-meme ne doit pas dire « reessayez plus tard ».
+    const corrigeables: Record<string, string> = {
+      'champs-invalides': 'Vérifiez le formulaire : votre nom, une adresse e-mail valide et un message d’au moins 5 caractères.',
+      captcha: 'La vérification anti-robot n’a pas abouti. Cochez la case de vérification, puis renvoyez.',
+    };
+    message.textContent = (reussi ? formulaire.dataset.merci : corrigeables[erreur] ?? formulaire.dataset.erreur) ?? '';
     if (reussi) formulaire.reset();
     bouton?.removeAttribute('disabled');
   });

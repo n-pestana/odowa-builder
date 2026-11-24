@@ -90,6 +90,13 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 - **Cause** : les sabotages visaient les pages du gabarit, pas celles du site construit.
 - **Réflexe** : les pages sabotées sont choisies dans `dist/` (une page ordinaire, une deuxième page, la page qui porte `<Formulaire />`). Un cas qui n'a pas de page applicable s'affiche « NON APPLICABLE », jamais vert en silence. Le workflow de l'usine rejoue les contrôles après avoir supprimé une page d'exemple.
 
+### 15. Un refus que le visiteur peut corriger ne doit pas dire « réessayez plus tard »
+
+- **Vécu** (pilote, ticket #15) : un message « test » (4 caractères) a été refusé par le serveur (422, minimum 5 caractères). La page affichait « Le message n'a pas pu être envoyé… réessayer plus tard », ce qui a fait croire à une panne. Le renvoi avec un vrai message est passé (200, constaté dans le journal en direct).
+- **Cause** : la page n'appliquait pas les règles du serveur, et toutes les erreurs donnaient le même texte.
+- **Réflexe** : la page applique les mêmes limites que `functions/api/contact.js` (`minlength`, `maxlength`). Les refus corrigeables (`champs-invalides`, `captcha`) disent quoi corriger. Seules les vraies pannes disent « plus tard ». Les tests navigateur vérifient les trois cas.
+- **Pour diagnostiquer** : `npx wrangler pages deployment tail ID --project-name site-ID --format json` (ID par l'API des déploiements) donne le code de chaque réponse de `/api/contact`, sans rien envoyer.
+
 ## Les commandes
 
 | Commande client | Script | Touche le site en ligne |
