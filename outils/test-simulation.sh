@@ -59,14 +59,27 @@ if [[ "$1 ${2:-}" == "auth status" ]]; then
   [[ "${FAUX_GH_CONNECTE:-1}" == 1 ]] || { echo "You are not logged into any GitHub hosts."; exit 1; }
   echo "  ✓ Logged in to github.com account essai"; echo "  - Token scopes: ${FAUX_GH_SCOPES:-'repo', 'workflow'}"; exit 0
 fi
-[[ "$1" == api && "${2:-}" == repos/* ]] && exit 1   # le depot n'existe pas
+if [[ "$1" == api && "${2:-}" == users/* ]]; then [[ "${FAUX_GH_LOGIN_INCONNU:-0}" == 1 ]] && exit 1; echo "${2#users/}"; exit 0; fi
+[[ "$1" == api && "${2:-}" == repos/* && "${FAUX_GH_DEPOT_EXISTE:-0}" != 1 ]] && exit 1   # le depot n'existe pas
+[[ "$1 ${2:-}" == "run list" ]] && { echo 4242; exit 0; }
 exit 0
 SH
 cat >"$FAUX/curl" <<'SH'
 #!/usr/bin/env bash
 cat >/dev/null   # le jeton arrive par l'entree standard
-URL=""; for a in "$@"; do [[ "$a" == https://* ]] && URL="$a"; done
+URL=""; SORTIE=""; METHODE=GET; prec=""
+for a in "$@"; do
+  [[ "$a" == https://* ]] && URL="$a"
+  [[ "$prec" == -o ]] && SORTIE="$a"
+  [[ "$prec" == -X ]] && METHODE="$a"
+  [[ "$prec" == --data && "$a" == @* ]] && echo "corps: $(cat "${a#@}")" >>"$FAUX_JOURNAL"
+  prec="$a"
+done
 echo "curl $*" >>"$FAUX_JOURNAL"
+if [[ -n "${FAUX_CF_CORPS:-}" && "$URL" == */pages/projects/* ]]; then   # onboarder : projet existant
+  [[ "$METHODE" == GET && -n "$SORTIE" ]] && cp "$FAUX_CF_CORPS" "$SORTIE"
+  printf 200; exit 0
+fi
 case "$URL" in
   */pages/projects)   printf '%s' "${FAUX_CF_LISTE:-200}" ;;
   */pages/projects/*) printf '%s' "${FAUX_CF_PROJET:-404}" ;;
@@ -113,6 +126,32 @@ ecrire_config; : >"$JOURNAL"
 lancer FAUX_RESEND=403 -- bash "$USINE/outils/nouveau-client.sh" essai "Boulangerie Essai" www.boulangerie-essai.fr --sans-verification >"$ZONE/creation-reelle.log" 2>&1
 verifier "creation reelle : prerequis rouges -> arret avant toute creation" \
   "[[ \$? -ne 0 ]] && grep -q 'prerequis rouges' '$ZONE/creation-reelle.log' && ! grep -qE 'gh (repo create|secret set|variable set)' '$JOURNAL'"
+
+# --- Onboarding d'un client existant : refuse avant toute modification, ou va au bout -----
+FICHES="$ZONE/clients"; mkdir -p "$FICHES"
+printf '{"identifiant":"essai","nom":"Boulangerie Essai","domaine":"site-essai.pages.dev","depot":"essai/site-essai","projetCloudflare":"site-essai","clientGithub":null}\n' >"$FICHES/essai.json"
+corps_cf() { # corps_cf FICHIER [VARIABLE-A-OMETTRE]
+  node -e 'const o=process.argv[2];const v={};for(const k of ["CONTACT_EXPEDITEUR","RESEND_API_KEY","TURNSTILE_SECRET","CONTACT_JETON_TEST","CONTACT_EMAIL_TEST"]) if(k!==o) v[k]={type:"plain_text"};v.CONTACT_EMAIL={type:"plain_text",value:"client@essai.test"};console.log(JSON.stringify({result:{deployment_configs:{production:{env_vars:v}}}}))' x "${2:-}" >"$1"
+}
+corps_cf "$ZONE/cf-ok.json"; corps_cf "$ZONE/cf-efface.json" RESEND_API_KEY
+onboarder() { lancer USINE_CLIENTS="$FICHES" FAUX_GH_DEPOT_EXISTE=1 FAUX_CF_CORPS="$ZONE/cf-ok.json" "$@" >"$ZONE/onboarder.log" 2>&1; }
+sans_modif() { ! grep -qE 'collaborators|PATCH|rerun' "$JOURNAL"; }
+ecrire_config; : >"$JOURNAL"
+verifier "onboarder : client inconnu -> refuse, rien de modifie" "! onboarder -- bash '$USINE/outils/onboarder.sh' inconnu client-essai client@essai.test && grep -q 'client inconnu' '$ZONE/onboarder.log' && sans_modif"
+: >"$JOURNAL"
+verifier "onboarder : adresse invalide -> refuse, rien de modifie" "! onboarder -- bash '$USINE/outils/onboarder.sh' essai client-essai pas-une-adresse && grep -q 'adresse e-mail invalide' '$ZONE/onboarder.log' && sans_modif"
+: >"$JOURNAL"
+verifier "onboarder : compte GitHub inexistant -> refuse, rien de modifie" "! onboarder FAUX_GH_LOGIN_INCONNU=1 -- bash '$USINE/outils/onboarder.sh' essai client-essai client@essai.test && grep -q \"n'existe pas\" '$ZONE/onboarder.log' && sans_modif"
+: >"$JOURNAL"
+verifier "onboarder : variables Cloudflare effacees apres reglage -> echec signale" "! onboarder FAUX_CF_CORPS='$ZONE/cf-efface.json' -- bash '$USINE/outils/onboarder.sh' essai client-essai client@essai.test && grep -q 'variables disparues : RESEND_API_KEY' '$ZONE/onboarder.log' && ! grep -q rerun '$JOURNAL'"
+: >"$JOURNAL"
+verifier "onboarder : tout est en place -> invite, regle l'adresse seule, redeploie, fiche a jour" \
+  "onboarder -- bash '$USINE/outils/onboarder.sh' essai client-essai client@essai.test && grep -q 'ONBOARDING TERMINE' '$ZONE/onboarder.log' \
+   && grep -q 'gh api -X PUT repos/essai/site-essai/collaborators/client-essai -f permission=push' '$JOURNAL' \
+   && grep -q 'corps: .*CONTACT_EMAIL.*client@essai.test' '$JOURNAL' && ! grep -q 'corps: .*RESEND' '$JOURNAL' \
+   && grep -q 'gh run rerun 4242' '$JOURNAL' && grep -q '\"clientGithub\": \"client-essai\"' '$FICHES/essai.json' \
+   && grep -q 'repositories=essai/site-essai&prompt=Bonjour' '$ZONE/onboarder.log' && grep -q 'Votre site Boulangerie Essai est en ligne' '$ZONE/onboarder.log'"
+verifier "onboarder : aucun secret affiche ni passe en argument" "! grep -q 'SECRET-' '$ZONE/onboarder.log' '$JOURNAL'"
 
 echo
 if [[ "$RATES" -eq 0 ]]; then echo "VERT - creation et mise a jour en simulation conformes."; else echo "ROUGE - $RATES verification(s) en echec. Journaux : $ZONE"; trap - EXIT; exit 1; fi

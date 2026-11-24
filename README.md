@@ -8,6 +8,7 @@ odowa-builder/                  ce dépôt (privé, Nicolas seul)
 ├── outils/
 │   ├── nouveau-client.sh       crée le dépôt, les réglages, les secrets et le projet Cloudflare d'un client
 │   ├── mettre-a-jour-client.sh pousse une nouvelle version du gabarit chez un client, ou chez tous
+│   ├── onboarder.sh            mise en route : invite le client, règle l'adresse du formulaire, affiche favori et mail
 │   ├── github.sh               réglages GitHub d'un dépôt client (appelé par nouveau-client.sh)
 │   ├── prerequis.sh            vérifie tout ce qui peut l'être avant de créer quoi que ce soit (appelé par nouveau-client.sh)
 │   ├── appliquer-gabarit.mjs   recopie le gabarit sans toucher au contenu du client
@@ -16,7 +17,7 @@ odowa-builder/                  ce dépôt (privé, Nicolas seul)
 ├── config.env                  valeurs communes, non versionné
 ├── secrets.env                 secrets communs, non versionné
 ├── INSTALLATION.md             mise en place de l'usine, puis d'un client
-├── MISE-EN-ROUTE.md            liste de mise en route d'un client et mail de bienvenue
+├── MISE-EN-ROUTE.md            créer et mettre en route un client : A, B, C
 ├── TESTS-COMPTE-CLIENT.md      tache F : tests en session cloud avec un compte client
 └── BRIEF-MAINTENANCE.md        mission de validation, pour Claude Code
 ```
@@ -30,8 +31,8 @@ Chaque client a **son propre dépôt** : `PROPRIETAIRE/site-IDENTIFIANT`. Il ne 
 outils/nouveau-client.sh plomberie-martin "Plomberie Martin" www.plomberie-martin.fr \
   --email-client contact@plomberie-martin.fr
 
-# Inviter le client quand son compte GitHub existe
-bash outils/github.sh n-pestana/site-plomberie-martin LOGIN-DU-CLIENT
+# Mettre le client en route quand son compte GitHub existe (MISE-EN-ROUTE.md, étape B)
+bash outils/onboarder.sh plomberie-martin LOGIN-DU-CLIENT contact@plomberie-martin.fr
 
 # Diffuser une amélioration du gabarit
 outils/mettre-a-jour-client.sh plomberie-martin      # un client

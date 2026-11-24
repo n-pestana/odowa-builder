@@ -268,6 +268,7 @@ function controlerTout({ dossier, urlProd, mode, sources, pagesEnLigne }) {
     if (pages.length > 1) signaler('descriptions-uniques', pages.join(', '), 'Meme meta description sur plusieurs pages.');
   }
 
+  if (!existsSync(join(dossier, 'sitemap.xml'))) signaler('sitemap', '/sitemap.xml', 'Le fichier /sitemap.xml est absent.');
   const indexSitemap = join(dossier, 'sitemap-index.xml');
   if (!existsSync(indexSitemap)) {
     signaler('sitemap', '/sitemap-index.xml', 'Le sitemap est absent.');

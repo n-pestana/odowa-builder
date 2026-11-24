@@ -1,58 +1,45 @@
-# Mise en route d'un client Odowa Builder
+# Créer et mettre en route un client
 
-La liste à suivre avec chaque nouveau client, du jour de la création jusqu'à sa première publication. La partie technique de la création est décrite dans `INSTALLATION.md`, section 2.
+Trois temps. La technique est dans deux commandes ; le reste se fait avec le client.
 
-> **État** : chaque étape a été faite au moins une fois sur le pilote, **sauf** celles marquées *(non testé)* : la liaison GitHub ↔ Claude n'a été faite qu'avec le compte `n-pestana`, jamais avec le compte d'un client (tâche F du brief).
+## A. Créer (toi seul, 5 minutes)
 
-## Avant le rendez-vous (toi seul)
+```bash
+outils/nouveau-client.sh ID "Nom affiché" site-ID.pages.dev --simulation /tmp/essai-ID   # répétition, rien en ligne
+outils/nouveau-client.sh ID "Nom affiché" site-ID.pages.dev                              # création
+git add clients/ID.json && git commit -m "Client ID" && git push
+```
 
-- [ ] `bash outils/prerequis.sh IDENTIFIANT` → `PREREQUIS VERTS`
-- [ ] `outils/nouveau-client.sh IDENTIFIANT "Nom affiché" DOMAINE --email-client … ` → les deux sites verts
-- [ ] Commit de `clients/IDENTIFIANT.json` dans l'usine
-- [ ] Remplacer la page d'attente par le vrai contenu : nom, téléphone, adresse, horaires (`src/donnees/entreprise.json`), textes des pages. Puis `/voir` et `/publier` depuis ta propre session
-- [ ] Ouvrir le site de test et le site en ligne sur ordinateur et téléphone
-- [ ] Envoyer un message depuis le formulaire du site en ligne, vérifier qu'il arrive chez le client *(vérifié sur le pilote le 24/11/2026)*
+- Résultat : une **page d'attente au nom du client**, en ligne et sur le site de test (accueil, contact, mentions légales). Aucun contenu fictif.
+- Puis : github.com/settings/installations → Claude → Configure → ajouter `site-ID`.
+- Le site de test peut mettre une minute à répondre (README, piège 16).
 
-## Pendant le rendez-vous (avec le client, 30 minutes)
+## B. Rendez-vous avec le client (30 minutes, ensemble)
 
-- [ ] **Compte GitHub** : le créer avec lui, à son nom, avec son e-mail, double authentification sur **son** téléphone
-- [ ] `bash outils/github.sh DEPOT LOGIN` : rôle écriture, jamais administrateur. Il accepte l'invitation reçue par mail
-- [ ] **Toi** : ajouter son dépôt à l'application GitHub de Claude (github.com/settings/installations → Claude → Configure → Only select repositories)
-- [ ] **Abonnement Claude** à son nom, puis connexion de son compte GitHub dans claude.ai/code *(non testé avec un compte client)*
-- [ ] Créer avec lui le **favori « ✨ Mon site »** sur son ordinateur et son téléphone : le lien affiché par `nouveau-client.sh` (`https://claude.ai/code?repositories=PROPRIETAIRE/site-ID&prompt=Bonjour`). Il clique, appuie sur Entrée : l'accueil ✨ **Odowa Builder** s'affiche *(lien non documenté par Anthropic : README de l'usine, piège 12)*
-- [ ] **Première modification de bout en bout, c'est lui qui tape** : une demande en français → `/voir` → il regarde sur son téléphone → `/publier` → « oui »
-- [ ] Lui montrer `/aide` et lui expliquer les couleurs : 🟢 tout va bien, 🟡 c'est à vous, ⏳ patientez, 🔴 bloqué, ⚪ pas pu vérifier
-- [ ] Lui envoyer le mail de bienvenue ci-dessous
+1. **Son compte GitHub** : il le crée avec son e-mail, double authentification sur **son** téléphone. Il ne verra jamais GitHub ensuite, mais Claude agit avec ce compte (rôle écriture, jamais le tien : tu es administrateur).
+2. **Une commande, par toi** :
+   ```bash
+   bash outils/onboarder.sh ID LOGIN-GITHUB adresse@client.fr
+   ```
+   Elle vérifie tout avant d'agir, invite son compte, règle l'adresse de réception du formulaire, redéploie le site en ligne et **affiche le favori et le mail de bienvenue remplis**. Il accepte l'invitation reçue par mail.
+3. **Son abonnement Claude**, puis il relie son GitHub dans claude.ai/code *(jamais fait avec un compte client : TESTS-COMPTE-CLIENT.md)*.
+4. **Le favori « ✨ Mon site »** sur son ordinateur et son téléphone (lien affiché à l'étape 2). Il clique, appuie sur Entrée : l'accueil s'affiche.
+5. **Sa première demande, c'est lui qui écrit** : « Crée mon site à partir de… » (son ancien site, une plaquette, ses textes). Puis `/voir`, il regarde sur son téléphone, `/publier`, « oui ».
+6. **Tu lui envoies le mail de bienvenue** (affiché à l'étape 2).
 
-## Après (dans la semaine)
+## C. Après
 
-- [ ] Brancher le domaine (DNS) sur le projet Pages, puis vérifier le site en ligne sur ce domaine
-- [ ] Regarder sa première modification faite seul (`gh api repos/DEPOT/pulls?state=closed`)
-- [ ] Vérifier qu'une alerte de test (`/prevenir-nicolas test`) t'arrive bien *(le mail des tickets n'arrive pas encore : réglages de notification GitHub à vérifier)*
+- **Le domaine**, quand il en a un : le brancher sur le projet Pages (DNS), puis changer `urlProd` dans `site.config.json`.
+- **Sa première modification faite seul** : y jeter un œil (`gh api repos/n-pestana/site-ID/pulls?state=closed`).
+- **Une alerte de test** (`/prevenir-nicolas test`) doit t'arriver *(mail des tickets pas encore reçu : réglages de notification GitHub à vérifier)*.
 
-## Mail de bienvenue (à adapter)
+## Ce qui est vérifié, et ce qui ne l'est pas
 
-> **Objet** : Votre site est prêt ✨
->
-> Bonjour *Prénom*,
->
-> Votre site *Nom du site* est en ligne : *https://www.domaine.fr*
->
-> Pour le modifier, cliquez sur votre favori **✨ Mon site** (*lien*) et appuyez sur Entrée. Ensuite, écrivez ce que vous voulez changer, en français courant : « change les horaires du samedi », « ajoute une page sur nos tarifs ».
->
-> Si le favori ne fonctionne plus, ouvrez **claude.ai/code**, choisissez votre site et écrivez directement votre demande.
->
-> Vos modifications arrivent d'abord sur votre **site de test**, que vos visiteurs ne voient pas. Quand tout vous plaît, tapez **/publier** : le site est vérifié automatiquement, puis mis en ligne.
->
-> Trois choses à retenir :
->
-> - **/aide** affiche tout ce que vous pouvez faire ;
-> - **/annuler-publication** remet la version précédente si quelque chose ne vous plaît pas en ligne ;
-> - **/prevenir-nicolas** me prévient si vous êtes bloqué. Vous n'avez rien à expliquer de technique.
->
-> Les couleurs vous disent où vous en êtes : 🟢 tout va bien, 🟡 c'est à vous de jouer, ⏳ un instant, 🔴 quelque chose bloque.
->
-> Vous ne pouvez rien casser : rien n'est mis en ligne sans votre /publier, et un site qui ne passe pas les contrôles n'est jamais publié.
->
-> À bientôt,
-> Nicolas PESTANA, Odowa Builder
+| Étape | État |
+|---|---|
+| A : création, page d'attente, premiers déploiements | Vérifié (numa-academy, 24/11/2026) |
+| B2 : `onboarder.sh` | Vérifié **en simulation** (refus et cas autorisé, sabotages détectés). **Jamais lancé sur un vrai client** |
+| B3 : liaison GitHub ↔ Claude d'un compte client | **Non testé** |
+| B4 : favori | Vérifié sur ordinateur ; téléphone non testé |
+| B5 : session cloud, `/voir`, `/publier` | Vérifié avec le compte `n-pestana` ; pas avec un compte client |
+| Formulaire avec un vrai visiteur | Vérifié sur le pilote |

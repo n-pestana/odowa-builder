@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 const config = JSON.parse(readFileSync(new URL('./site.config.json', import.meta.url), 'utf8'));
 
@@ -21,6 +21,13 @@ const enTetes = {
   hooks: { 'astro:build:done': ({ dir }) => writeFileSync(new URL('_headers', dir), EN_TETES) },
 };
 
+// /sitemap.xml : l'adresse que les outils et Google cherchent par defaut. Copie de l'index
+// produit par @astrojs/sitemap (liste avant dans integrations, donc deja ecrit ici).
+const sitemapXml = {
+  name: 'sitemap-xml',
+  hooks: { 'astro:build:done': ({ dir }) => copyFileSync(new URL('sitemap-index.xml', dir), new URL('sitemap.xml', dir)) },
+};
+
 // robots.txt vient du noyau (reserve, mis a jour chez les clients), pas de src/pages/.
 const robots = {
   name: 'robots-du-noyau',
@@ -32,5 +39,5 @@ export default defineConfig({
   site: config.urlProd,
   trailingSlash: 'always',
   build: { format: 'directory' },
-  integrations: [sitemap({ filter: (page) => !page.includes('/404') }), enTetes, robots],
+  integrations: [sitemap({ filter: (page) => !page.includes('/404') }), enTetes, robots, sitemapXml],
 });

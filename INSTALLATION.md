@@ -97,6 +97,8 @@ Pour répéter à blanc, sans rien créer en ligne : ajoute `--simulation /tmp/e
 
 ### Ce qui reste manuel, par client
 
+La version courte, à suivre : `MISE-EN-ROUTE.md`. L'invitation du client et l'adresse du formulaire se font avec `bash outils/onboarder.sh ID LOGIN EMAIL`.
+
 1. **Le contenu** : remplacer la page d'attente (accueil, contact, mentions légales, au nom du client, sans contenu fictif). Le plus simple est de le faire avec Claude Code dans un clone du dépôt du client, puis `/voir`.
 2. **Le domaine** : le brancher sur le projet Pages (DNS).
 3. **Le compte GitHub du client** : le créer avec lui, à son nom, avec son e-mail, double authentification sur son téléphone. Puis `bash outils/github.sh DEPOT LOGIN`. Rôle « écriture », jamais administrateur : une session Claude agit avec les droits du compte connecté.

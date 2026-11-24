@@ -108,6 +108,11 @@ const sabotages = [
     appliquer: (d) => rmSync(join(d, 'sitemap-index.xml')),
   },
   {
+    nom: 'sitemap.xml supprime',
+    attendu: { controle: 'sitemap', page: '/sitemap.xml' },
+    appliquer: (d) => rmSync(join(d, 'sitemap.xml')),
+  },
+  {
     nom: 'page retiree du sitemap',
     attendu: { controle: 'sitemap', page: A },
     appliquer: (d) => modifier(d, 'sitemap-0.xml', (x) => x.replace(new RegExp(`<url><loc>[^<]*${echapper(A)}</loc>.*?</url>`, 's'), '')),
