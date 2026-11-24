@@ -1,0 +1,11 @@
+{
+  "identifiant": "numa-academy",
+  "nom": "Numa Academy",
+  "domaine": "site-numa-academy.pages.dev",
+  "depot": "n-pestana/site-numa-academy",
+  "projetCloudflare": "site-numa-academy",
+  "urlDev": "https://dev.site-numa-academy.pages.dev",
+  "clientGithub": null,
+  "creeLe": "2026-11-24",
+  "versionGabarit": "7a09094"
+}
