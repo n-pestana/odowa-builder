@@ -9,7 +9,7 @@
 // REGLE : tout controle ajoute ici doit avoir son sabotage dans test-a-l-envers.mjs.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, realpathSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'node-html-parser';
@@ -359,6 +359,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // Pages du site en ligne, lues dans git (branche du site en ligne). Inconnues ici : non verifie, et on le dit.
   let pagesEnLigne = null;
   try {
+    // Seulement dans un depot client (site a la racine du depot). Dans l'usine, gabarit/ n'a pas de site en ligne.
+    const racineGit = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: RACINE, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (realpathSync(racineGit) !== realpathSync(RACINE)) throw new Error('pas un depot client');
     pagesEnLigne = execFileSync('git', ['ls-tree', '-r', '--name-only', `origin/${config.brancheProd ?? 'main'}`, '--', 'src/pages'], { cwd: RACINE, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
       .split('\n').map(adresseDuSource).filter(Boolean);
   } catch {
@@ -366,7 +369,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   const { problemes, pages } = controler({ dossier: join(RACINE, 'dist'), urlProd: config.urlProd, mode, seulement, sources: join(RACINE, 'src'), pagesEnLigne });
   const portee = seulement ? `, controles : ${seulement.join(', ')}` : '';
-  if (!pagesEnLigne && (!seulement || seulement.includes('redirections'))) console.log('NON VERIFIE - redirections : pages du site en ligne inconnues ici (pas de origin/main).');
+  if (!pagesEnLigne && (!seulement || seulement.includes('redirections'))) console.log('NON VERIFIE - redirections : pages du site en ligne inconnues ici (usine, ou pas de origin/main).');
 
   mkdirSync(join(RACINE, '.rapports'), { recursive: true });
   writeFileSync(

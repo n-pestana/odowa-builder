@@ -1,10 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
+import entreprise from '../donnees/entreprise.json';
 ---
 
 <Base
-  title="Page introuvable | Exemple SARL"
-  description="Cette page n'existe pas ou n'existe plus. Retournez à l'accueil du site d'Exemple SARL pour retrouver nos prestations et nos coordonnées."
+  title={`Page introuvable | ${entreprise.nom}`}
+  description={`Cette page n'existe pas ou n'existe plus. Retournez à l'accueil du site de ${entreprise.nom}.`}
   indexable={false}
 >
   <h1>Page introuvable</h1>

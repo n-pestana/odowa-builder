@@ -1,6 +1,6 @@
 ---
-// Les coordonnees viennent de src/donnees/entreprise.json : une seule source.
 // Le contenu de cette page est sous la responsabilite du client.
+// Les coordonnees viennent de src/donnees/entreprise.json : une seule source.
 import Base from '../layouts/Base.astro';
 import entreprise from '../donnees/entreprise.json';
 const { rue, codePostal, ville } = entreprise.adresse;
@@ -8,12 +8,12 @@ const { rue, codePostal, ville } = entreprise.adresse;
 
 <Base
   title={`Mentions légales | ${entreprise.nom}`}
-  description={`Mentions légales du site d'${entreprise.nom}, plombier chauffagiste à Beauvais - éditeur du site, hébergeur et informations sur les données personnelles.`}
+  description={`Mentions légales du site de ${entreprise.nom} : éditeur du site, hébergeur et informations sur les données personnelles.`}
 >
   <h1>Mentions légales</h1>
 
   <h2>Éditeur du site</h2>
-  <p>{entreprise.nom}, {rue}, {codePostal} {ville}.</p>
+  <p>{entreprise.nom}{rue && `, ${rue}, ${codePostal} ${ville}`}.</p>
 
   <h2>Hébergeur</h2>
   <p>Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis.</p>

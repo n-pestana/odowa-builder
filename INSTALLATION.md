@@ -97,7 +97,7 @@ Pour répéter à blanc, sans rien créer en ligne : ajoute `--simulation /tmp/e
 
 ### Ce qui reste manuel, par client
 
-1. **Le contenu** : remplacer les pages d'exemple. Le plus simple est de le faire avec Claude Code dans un clone du dépôt du client, puis `/voir`.
+1. **Le contenu** : remplacer la page d'attente (accueil, contact, mentions légales, au nom du client, sans contenu fictif). Le plus simple est de le faire avec Claude Code dans un clone du dépôt du client, puis `/voir`.
 2. **Le domaine** : le brancher sur le projet Pages (DNS).
 3. **Le compte GitHub du client** : le créer avec lui, à son nom, avec son e-mail, double authentification sur son téléphone. Puis `bash outils/github.sh DEPOT LOGIN`. Rôle « écriture », jamais administrateur : une session Claude agit avec les droits du compte connecté.
 4. **Son accès Claude** : abonnement, connexion de son compte GitHub dans claude.ai/code. **Toi**, ajoute son dépôt à l'application GitHub de Claude installée sur ton compte (github.com/settings/installations → Claude → Configure → Only select repositories) : le client ne peut pas le faire, le dépôt t'appartient. L'environnement cloud par défaut suffit. Il ouvre une session **cloud**, pas une session locale, et tape les commandes en entier (`/aide`) : elles n'apparaissent pas dans le menu `/` de l'application. Lui créer le favori affiché par `nouveau-client.sh` : il choisit le dépôt et pré-remplit « Bonjour » (paramètres non documentés, README de l'usine, piège 12).

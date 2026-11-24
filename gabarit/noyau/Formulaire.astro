@@ -38,7 +38,7 @@ const cleCaptcha = import.meta.env.PUBLIC_TURNSTILE_SITEKEY;
   <p class="message-formulaire" id="message-formulaire" role="status" hidden></p>
 </form>
 <noscript>
-  <p>Le formulaire a besoin de JavaScript. Vous pouvez aussi nous écrire à {entreprise.email}.</p>
+  <p>Le formulaire a besoin de JavaScript.{entreprise.email && ` Vous pouvez aussi nous écrire à ${entreprise.email}.`}</p>
 </noscript>
 
 {cleCaptcha && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}

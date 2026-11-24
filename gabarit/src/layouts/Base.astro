@@ -24,8 +24,9 @@ const { title, description, indexable = true } = Astro.props.frontmatter ?? Astr
   </main>
   <footer class="pied">
     <p>
-      {entreprise.nom} · {entreprise.adresse.rue}, {entreprise.adresse.codePostal}{' '}
-      {entreprise.adresse.ville} · <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a>
+      {entreprise.nom}
+      {entreprise.adresse.rue && ` · ${entreprise.adresse.rue}, ${entreprise.adresse.codePostal} ${entreprise.adresse.ville}`}
+      {entreprise.telephone && <> · <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a></>}
     </p>
     <p><a href="/mentions-legales/">Mentions légales</a></p>
   </footer>

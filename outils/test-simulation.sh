@@ -24,6 +24,7 @@ verifier "depot rempli" "grep -q '\"depot\": \"$PROPRIETAIRE/site-essai\"' '$SIT
 verifier "CODEOWNERS rempli" "grep -q '@$LOGIN_NICOLAS' '$SITE/.github/CODEOWNERS' && ! grep -q 'LOGIN-GITHUB-DE-NICOLAS' '$SITE/.github/CODEOWNERS'"
 verifier "nom de l'entreprise rempli" "grep -q 'Boulangerie Essai' '$SITE/src/donnees/entreprise.json'"
 verifier "favori du client : depot choisi et Bonjour pre-rempli" "grep -qF 'Favori du client : https://claude.ai/code?repositories=$PROPRIETAIRE/site-essai&prompt=Bonjour' '$ZONE/creation.log'"
+verifier "aucun contenu fictif (page d'attente au nom du client)" "! grep -rqiE 'plomb|Exemple SARL|Beauvais|01 23 45' '$SITE/src' && grep -q 'Boulangerie Essai' '$SITE/src/donnees/entreprise.json'"
 verifier "version du gabarit enregistree" "[[ -s '$SITE/.gabarit-version' ]]"
 verifier "aucun outil de l'usine chez le client" "[[ ! -e '$SITE/outils' && ! -e '$SITE/secrets.env' && ! -e '$SITE/BRIEF-MAINTENANCE.md' ]]"
 verifier "un identifiant invalide est refuse" "! bash '$USINE/outils/nouveau-client.sh' 'Pas Valide' 'X' www.x.fr --simulation '$ZONE/x' >/dev/null 2>&1"

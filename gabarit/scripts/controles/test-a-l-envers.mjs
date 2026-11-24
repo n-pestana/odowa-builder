@@ -240,7 +240,14 @@ const sabotages = [
   {
     nom: 'telephone ecrit en dur dans une page',
     attendu: { controle: 'ssot', page: 'src/pages/index.md' },
-    appliquer: (d) => appendFileSync(source(d, 'pages/index.md'), `\nAppelez le ${JSON.parse(readFileSync(source(d, 'donnees/entreprise.json'), 'utf8')).telephoneAffiche}.\n`),
+    appliquer: (d) => {
+      // Un numero est pose dans la copie : le site du client peut ne pas en avoir encore.
+      const fichier = source(d, 'donnees/entreprise.json');
+      const entreprise = JSON.parse(readFileSync(fichier, 'utf8'));
+      entreprise.telephoneAffiche ||= '06 12 34 56 78';
+      writeFileSync(fichier, JSON.stringify(entreprise));
+      appendFileSync(source(d, 'pages/index.md'), `\nAppelez le ${entreprise.telephoneAffiche}.\n`);
+    },
   },
   {
     nom: 'couleur ecrite en dur hors de Base.astro',
@@ -406,4 +413,4 @@ if (rates > 0) {
   console.log(`\nROUGE - ${rates} regression(s) non detectee(s) : les controles concernes ne protegent rien.`);
   process.exit(1);
 }
-console.log(`\nVERT - ${sabotages.length + 1} regressions injectees, toutes detectees ; ${autorises.length} bonnes methodes autorisees ; ${casPublication.length} cas de publication du site de test conformes.`);
+console.log(`\nVERT - ${sabotages.length + 1} regressions injectees, toutes detectees ; ${autorises.filter((c) => c.applicable !== false).length} bonnes methodes autorisees ; ${casPublication.length} cas de publication du site de test conformes.`);

@@ -1,7 +1,7 @@
 // Tests dans un vrai navigateur, sur ordinateur et sur téléphone.
 // Ils complètent "npm run check" : ici on vérifie ce qu'un visiteur voit et peut faire.
 
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
@@ -15,6 +15,11 @@ const pages = existsSync(DIST)
       .map((f) => '/' + relative(DIST, f).split(sep).join('/').replace(/index\.html$/, ''))
       .sort()
   : [];
+
+// Page qui porte le formulaire du noyau (<Formulaire />), ou aucune : on ne suppose pas qu'elle s'appelle /contact/.
+const FORMULAIRE =
+  pages.find((p) => readFileSync(join(DIST, p.slice(1), 'index.html'), 'utf8').includes('id="formulaire-contact"')) ?? null;
+const avecFormulaire = () => test.skip(FORMULAIRE === null, 'aucune page ne porte <Formulaire /> : tests du formulaire sans objet');
 
 test('le site a été construit', () => {
   expect(pages.length, 'aucune page dans dist/ : lancer "npm run build" avant les tests').toBeGreaterThan(0);
@@ -59,7 +64,8 @@ test('une adresse inconnue affiche la page 404', async ({ page: onglet }) => {
 });
 
 test('le formulaire de contact s\'envoie et confirme au visiteur', async ({ page: onglet }) => {
-  await onglet.goto('/contact/');
+  avecFormulaire();
+  await onglet.goto(FORMULAIRE);
   await onglet.getByLabel('Votre nom').fill('Test automatique');
   await onglet.getByLabel('Votre e-mail').fill('test-automatique@example.com');
   await onglet.getByLabel('Votre message').fill('Ceci est un test automatique du formulaire.');
@@ -78,7 +84,8 @@ test('le formulaire refuse un envoi invalide', async ({ request }) => {
 test('un message trop court est bloqué par la page, sans envoi', async ({ page: onglet }) => {
   let envois = 0;
   await onglet.route('**/api/contact', (route) => { envois += 1; return route.continue(); });
-  await onglet.goto('/contact/');
+  avecFormulaire();
+  await onglet.goto(FORMULAIRE);
   await onglet.getByLabel('Votre nom').fill('Test automatique');
   await onglet.getByLabel('Votre e-mail').fill('test-automatique@example.com');
   await onglet.getByLabel('Votre message').fill('test');
@@ -94,7 +101,8 @@ for (const [code, erreur, attendu] of [
 ]) {
   test(`un refus corrigeable (${erreur}) explique quoi corriger`, async ({ page: onglet }) => {
     await onglet.route('**/api/contact', (route) => route.fulfill({ status: code, contentType: 'application/json', body: JSON.stringify({ ok: false, erreur }) }));
-    await onglet.goto('/contact/');
+    avecFormulaire();
+  await onglet.goto(FORMULAIRE);
     await onglet.getByLabel('Votre nom').fill('Test automatique');
     await onglet.getByLabel('Votre e-mail').fill('test-automatique@example.com');
     await onglet.getByLabel('Votre message').fill('Ceci est un test automatique du formulaire.');
@@ -108,7 +116,8 @@ for (const [code, erreur, attendu] of [
 
 test('le formulaire affiche une erreur quand l\'envoi échoue', async ({ page: onglet }) => {
   await onglet.route('**/api/contact', (route) => route.fulfill({ status: 502, contentType: 'application/json', body: '{"ok":false}' }));
-  await onglet.goto('/contact/');
+  avecFormulaire();
+  await onglet.goto(FORMULAIRE);
   await onglet.getByLabel('Votre nom').fill('Test automatique');
   await onglet.getByLabel('Votre e-mail').fill('test-automatique@example.com');
   await onglet.getByLabel('Votre message').fill('Ceci est un test automatique du formulaire.');

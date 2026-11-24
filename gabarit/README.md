@@ -97,6 +97,12 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 - **Réflexe** : la page applique les mêmes limites que `functions/api/contact.js` (`minlength`, `maxlength`). Les refus corrigeables (`champs-invalides`, `captcha`) disent quoi corriger. Seules les vraies pannes disent « plus tard ». Les tests navigateur vérifient les trois cas.
 - **Pour diagnostiquer** : `npx wrangler pages deployment tail ID --project-name site-ID --format json` (ID par l'API des déploiements) donne le code de chaque réponse de `/api/contact`, sans rien envoyer.
 
+### 16. Pas de contenu fictif dans un site neuf
+
+- **Vécu** (numa-academy) : le site en ligne d'un client tout juste créé, public et indexable, affichait « Votre plombier chauffagiste à Beauvais », avec une fausse adresse et un faux numéro, sous le nom du client.
+- **Réflexe** : le gabarit ne contient qu'une page d'attente (accueil au nom du client, contact avec le formulaire, mentions légales). Tout est lu dans `entreprise.json`, dont les coordonnées sont vides tant que le client ne les a pas données. Le pied de page et les données structurées n'affichent que ce qui existe. `test-simulation.sh` vérifie qu'aucun contenu fictif n'arrive chez un nouveau client.
+- **Conséquence** : les contrôles et les tests ne supposent plus aucune page d'exemple. Les tests du formulaire cherchent la page qui porte `<Formulaire />`, et sont « sans objet » s'il n'y en a pas. Le contrôle des redirections ne tourne que dans un dépôt client.
+
 ## Les commandes
 
 | Commande client | Script | Touche le site en ligne |

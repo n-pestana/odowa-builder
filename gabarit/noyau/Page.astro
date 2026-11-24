@@ -16,7 +16,9 @@ const estDev = import.meta.env.PUBLIC_ENV === 'dev';
 const version = import.meta.env.PUBLIC_VERSION ?? 'local';
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 
-const donneesStructurees = {
+// Champs vides retires : une donnee structuree fausse ou vide nuit au referencement.
+const sansVides = (objet) => Object.fromEntries(Object.entries(objet).filter(([, v]) => v !== '' && v !== undefined));
+const donneesStructurees = sansVides({
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: entreprise.nom,
@@ -24,14 +26,16 @@ const donneesStructurees = {
   url: Astro.site?.href,
   telephone: entreprise.telephone,
   email: entreprise.email,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: entreprise.adresse.rue,
-    postalCode: entreprise.adresse.codePostal,
-    addressLocality: entreprise.adresse.ville,
-    addressCountry: entreprise.adresse.pays,
-  },
-};
+  address: entreprise.adresse.rue
+    ? {
+        '@type': 'PostalAddress',
+        streetAddress: entreprise.adresse.rue,
+        postalCode: entreprise.adresse.codePostal,
+        addressLocality: entreprise.adresse.ville,
+        addressCountry: entreprise.adresse.pays,
+      }
+    : undefined,
+});
 ---
 
 <!doctype html>

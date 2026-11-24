@@ -9,7 +9,7 @@ La liste à suivre avec chaque nouveau client, du jour de la création jusqu'à 
 - [ ] `bash outils/prerequis.sh IDENTIFIANT` → `PREREQUIS VERTS`
 - [ ] `outils/nouveau-client.sh IDENTIFIANT "Nom affiché" DOMAINE --email-client … ` → les deux sites verts
 - [ ] Commit de `clients/IDENTIFIANT.json` dans l'usine
-- [ ] Remplacer le contenu d'exemple : nom, téléphone, adresse, horaires (`src/donnees/entreprise.json`), textes des pages. Puis `/voir` et `/publier` depuis ta propre session
+- [ ] Remplacer la page d'attente par le vrai contenu : nom, téléphone, adresse, horaires (`src/donnees/entreprise.json`), textes des pages. Puis `/voir` et `/publier` depuis ta propre session
 - [ ] Ouvrir le site de test et le site en ligne sur ordinateur et téléphone
 - [ ] Envoyer un message depuis le formulaire du site en ligne, vérifier qu'il arrive chez le client *(vérifié sur le pilote le 24/11/2026)*
 

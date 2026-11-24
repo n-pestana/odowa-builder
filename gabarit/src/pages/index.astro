@@ -1,0 +1,14 @@
+---
+// Page d'attente : remplacee par le vrai contenu du client.
+import Base from '../layouts/Base.astro';
+import entreprise from '../donnees/entreprise.json';
+---
+
+<Base
+  title={`${entreprise.nom} · Site en préparation`}
+  description={`Le site de ${entreprise.nom} est en cours de préparation. Pour toute demande, écrivez-nous depuis la page Contact.`}
+>
+  <h1>{entreprise.nom}</h1>
+  <p>Notre site est en cours de préparation.</p>
+  <p><a href="/contact/">Nous écrire</a></p>
+</Base>

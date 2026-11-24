@@ -5,14 +5,15 @@ import entreprise from '../donnees/entreprise.json';
 ---
 
 <Base
-  title="Contact et devis gratuit | Exemple SARL"
-  description="Contactez Exemple SARL, plombier chauffagiste à Beauvais, pour un dépannage ou un devis gratuit. Réponse sous 48 heures par téléphone ou par e-mail."
+  title={`Contact | ${entreprise.nom}`}
+  description={`Écrivez à ${entreprise.nom} avec le formulaire de contact. Nous vous répondons dès que possible.`}
 >
   <h1>Nous contacter</h1>
-  <p>
-    Par téléphone au <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a>{' '}
-    ({entreprise.horaires.toLowerCase()}), ou avec ce formulaire.
-  </p>
+  {entreprise.telephone && (
+    <p>
+      Par téléphone au <a href={`tel:${entreprise.telephone}`}>{entreprise.telephoneAffiche}</a>{entreprise.horaires && ` (${entreprise.horaires.toLowerCase()})`}, ou avec ce formulaire.
+    </p>
+  )}
 
-  <Formulaire />
+  <Formulaire merci="Merci, votre message est bien parti. Nous vous répondons dès que possible." />
 </Base>

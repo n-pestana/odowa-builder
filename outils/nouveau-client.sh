@@ -101,7 +101,7 @@ if grep -rq 'LOGIN-GITHUB-DE-NICOLAS\|PROPRIETAIRE/NOM-DU-DEPOT' "$TRAVAIL/site.
   fatal "il reste des valeurs non remplies dans site.config.json ou CODEOWNERS"
 fi
 fait "fichiers du client remplis (site.config.json, CODEOWNERS, nom de l'entreprise)"
-manuel "Remplacer le contenu d'exemple : src/pages/, src/donnees/entreprise.json, public/favicon.svg"
+manuel "Remplacer la page d'attente par le vrai contenu (session cloud du client, ou la tienne) : src/pages/, src/donnees/entreprise.json (telephone, adresse...), public/favicon.svg"
 
 # --- 2. Verifier avant de pousser -------------------------------------------------
 if [[ "$SANS_VERIF" -eq 0 ]]; then

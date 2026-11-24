@@ -45,10 +45,9 @@ jobs:
       # (vécu : refonte du pilote sans /prestations/, check:envers plantait). Piège 14 du gabarit.
       - name: Contrôles sans les pages d'exemple
         run: |
-          rm src/pages/prestations.md
-          sed -i '/"lien": "\/prestations\/"/d' src/donnees/entreprise.json
-          sed -i '/(\/prestations\/)/d' src/pages/index.md
-          echo '/prestations/ / 301' > public/_redirects
+          rm src/pages/contact.astro
+          sed -i '/"lien": "\/contact\/"/d; s/"lien": "\/" },/"lien": "\/" }/' src/donnees/entreprise.json
+          sed -i 's#<p><a href="/contact/">Nous écrire</a></p>##' src/pages/index.astro
           npm run build && npm run check && npm run check:envers
       - name: Conserver les captures d'écran
         if: always()
