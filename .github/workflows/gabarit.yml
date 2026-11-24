@@ -41,6 +41,15 @@ jobs:
         env:
           PUBLIC_ENV: dev
         run: npm run build && npm run check -- --mode=dev
+      # Un client qui supprime une page d'exemple ne doit pas casser ses propres contrôles
+      # (vécu : refonte du pilote sans /prestations/, check:envers plantait). Piège 14 du gabarit.
+      - name: Contrôles sans les pages d'exemple
+        run: |
+          rm src/pages/prestations.md
+          sed -i '/"lien": "\/prestations\/"/d' src/donnees/entreprise.json
+          sed -i '/(\/prestations\/)/d' src/pages/index.md
+          echo '/prestations/ / 301' > public/_redirects
+          npm run build && npm run check && npm run check:envers
       - name: Conserver les captures d'écran
         if: always()
         uses: actions/upload-artifact@v4

@@ -84,6 +84,12 @@ Cette section est la plus rentable à maintenir. Chaque piège qui a coûté du 
 
   Le contrôle `[noyau]` refuse une page qui n'y passe pas. `src/` ne garde que ce que le client peut changer sans risque.
 
+### 14. Les tests à l'envers ne doivent pas dépendre du site d'exemple
+
+- **Vécu** (pilote, refonte Tymea faite en session cloud) : le client a supprimé `/prestations/`. `check:envers` sabotait des pages nommées en dur (`prestations`, `contact`, `mentions-legales`) et plantait : 10 erreurs. Comme il tourne dans le job `controles`, toute publication du client aurait été bloquée.
+- **Cause** : les sabotages visaient les pages du gabarit, pas celles du site construit.
+- **Réflexe** : les pages sabotées sont choisies dans `dist/` (une page ordinaire, une deuxième page, la page qui porte `<Formulaire />`). Un cas qui n'a pas de page applicable s'affiche « NON APPLICABLE », jamais vert en silence. Le workflow de l'usine rejoue les contrôles après avoir supprimé une page d'exemple.
+
 ## Les commandes
 
 | Commande client | Script | Touche le site en ligne |

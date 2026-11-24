@@ -5,7 +5,7 @@
 
 import { appendFileSync, cpSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { controler } from './index.mjs';
 
@@ -13,6 +13,22 @@ const RACINE = fileURLToPath(new URL('../../', import.meta.url));
 const DIST = join(RACINE, 'dist');
 const SRC = join(RACINE, 'src');
 const config = JSON.parse(readFileSync(join(RACINE, 'site.config.json'), 'utf8'));
+
+// Les pages sabotees sont prises dans le site REEL du client, jamais dans le site d'exemple
+// (un client qui supprime une page d'exemple ne doit pas bloquer ses propres controles).
+const pagesDuSite = readdirSync(DIST, { recursive: true }).map(String).filter((f) => f.endsWith('index.html') && f !== 'index.html').sort();
+const aUnFormulaire = (f) => readFileSync(join(DIST, f), 'utf8').includes('id="formulaire-contact"');
+const FORMULAIRE = pagesDuSite.find(aUnFormulaire) ?? null; // page qui porte <Formulaire />
+const AUTRE = pagesDuSite.find((f) => !aUnFormulaire(f)) ?? pagesDuSite[0]; // une page ordinaire
+const TROISIEME = pagesDuSite.find((f) => f !== AUTRE) ?? AUTRE; // une deuxieme page
+if (!AUTRE) {
+  console.log('ROUGE - le site n\'a qu\'une page : les sabotages ont besoin d\'au moins deux pages. Prevenir Nicolas.');
+  process.exit(1);
+}
+const adresse = (f) => '/' + f.replace(/index\.html$/, '');
+const A = adresse(AUTRE);
+const T = adresse(TROISIEME);
+const echapper = (t) => t.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 
 const modifier = (dossier, fichier, transformation) => {
   const chemin = join(dossier, fichier);
@@ -30,13 +46,13 @@ const source = (d, fichier) => join(d, '__src', fichier);
 const sabotages = [
   {
     nom: 'titre supprime',
-    attendu: { controle: 'titre', page: '/contact/' },
-    appliquer: (d) => modifier(d, 'contact/index.html', (h) => h.replace(/<title>.*?<\/title>/s, '')),
+    attendu: { controle: 'titre', page: T },
+    appliquer: (d) => modifier(d, TROISIEME, (h) => h.replace(/<title>.*?<\/title>/s, '')),
   },
   {
     nom: 'description supprimee',
-    attendu: { controle: 'description', page: '/prestations/' },
-    appliquer: (d) => modifier(d, 'prestations/index.html', (h) => h.replace(/<meta name="description"[^>]*>/, '')),
+    attendu: { controle: 'description', page: A },
+    appliquer: (d) => modifier(d, AUTRE, (h) => h.replace(/<meta name="description"[^>]*>/, '')),
   },
   {
     nom: 'deuxieme h1',
@@ -50,9 +66,9 @@ const sabotages = [
   },
   {
     nom: 'noindex en prod',
-    attendu: { controle: 'indexation', page: '/prestations/' },
+    attendu: { controle: 'indexation', page: A },
     appliquer: (d) =>
-      modifier(d, 'prestations/index.html', (h) => h.replace('</head>', '<meta name="robots" content="noindex"></head>')),
+      modifier(d, AUTRE, (h) => h.replace('</head>', '<meta name="robots" content="noindex"></head>')),
   },
   {
     nom: 'image sans alt',
@@ -61,21 +77,21 @@ const sabotages = [
   },
   {
     nom: 'canonical vers un autre domaine',
-    attendu: { controle: 'canonical', page: '/contact/' },
+    attendu: { controle: 'canonical', page: T },
     appliquer: (d) =>
-      modifier(d, 'contact/index.html', (h) => h.replace(/(<link rel="canonical" href=")[^"]*/, '$1https://autre-domaine.test/contact/')),
+      modifier(d, TROISIEME, (h) => h.replace(/(<link rel="canonical" href=")[^"]*/, '$1https://autre-domaine.test/page/')),
   },
   {
     nom: 'attribut lang supprime',
-    attendu: { controle: 'langue', page: '/mentions-legales/' },
-    appliquer: (d) => modifier(d, 'mentions-legales/index.html', (h) => h.replace(/<html lang="[^"]*"/, '<html')),
+    attendu: { controle: 'langue', page: T },
+    appliquer: (d) => modifier(d, TROISIEME, (h) => h.replace(/<html lang="[^"]*"/, '<html')),
   },
   {
     nom: 'titre en double',
     attendu: { controle: 'titres-uniques' },
     appliquer: (d) => {
       const titre = readFileSync(join(d, 'index.html'), 'utf8').match(/<title>.*?<\/title>/s)[0];
-      modifier(d, 'contact/index.html', (h) => h.replace(/<title>.*?<\/title>/s, titre));
+      modifier(d, TROISIEME, (h) => h.replace(/<title>.*?<\/title>/s, titre));
     },
   },
   {
@@ -83,7 +99,7 @@ const sabotages = [
     attendu: { controle: 'descriptions-uniques' },
     appliquer: (d) => {
       const description = readFileSync(join(d, 'index.html'), 'utf8').match(/<meta name="description"[^>]*>/)[0];
-      modifier(d, 'contact/index.html', (h) => h.replace(/<meta name="description"[^>]*>/, description));
+      modifier(d, TROISIEME, (h) => h.replace(/<meta name="description"[^>]*>/, description));
     },
   },
   {
@@ -93,8 +109,8 @@ const sabotages = [
   },
   {
     nom: 'page retiree du sitemap',
-    attendu: { controle: 'sitemap', page: '/prestations/' },
-    appliquer: (d) => modifier(d, 'sitemap-0.xml', (x) => x.replace(/<url><loc>[^<]*\/prestations\/<\/loc>.*?<\/url>/s, '')),
+    attendu: { controle: 'sitemap', page: A },
+    appliquer: (d) => modifier(d, 'sitemap-0.xml', (x) => x.replace(new RegExp(`<url><loc>[^<]*${echapper(A)}</loc>.*?</url>`, 's'), '')),
   },
   {
     nom: 'robots.txt qui bloque tout',
@@ -113,19 +129,19 @@ const sabotages = [
   },
   {
     nom: 'page qui ne passe pas par le noyau',
-    attendu: { controle: 'noyau', page: '/prestations/' },
-    appliquer: (d) => modifier(d, 'prestations/index.html', (h) => h.replace(/<meta name="noyau"[^>]*>/, '')),
+    attendu: { controle: 'noyau', page: A },
+    appliquer: (d) => modifier(d, AUTRE, (h) => h.replace(/<meta name="noyau"[^>]*>/, '')),
   },
   // --- Bonnes methodes de construction ---
   {
     nom: 'adresse de page avec majuscules et souligne',
-    attendu: { controle: 'adresses', page: '/Nos_Prestations/' },
-    appliquer: (d) => renameSync(join(d, 'prestations'), join(d, 'Nos_Prestations')),
+    attendu: { controle: 'adresses', page: '_Mal_Nommee/' },
+    appliquer: (d) => renameSync(join(d, dirname(AUTRE)), join(d, dirname(dirname(AUTRE)), `${basename(dirname(AUTRE))}_Mal_Nommee`)),
   },
   {
     nom: 'niveau de titre saute (h4 apres h2)',
-    attendu: { controle: 'niveaux-titres', page: '/prestations/' },
-    appliquer: (d) => ajouter(d, 'prestations/index.html', '<h2>Section</h2><h4>Saut</h4>'),
+    attendu: { controle: 'niveaux-titres', page: A },
+    appliquer: (d) => ajouter(d, AUTRE, '<h2>Section</h2><h4>Saut</h4>'),
   },
   {
     nom: 'police chargee chez Google',
@@ -134,33 +150,33 @@ const sabotages = [
   },
   {
     nom: 'police importee dans un style',
-    attendu: { controle: 'ressources-externes', page: '/contact/' },
-    appliquer: (d) => modifier(d, 'contact/index.html', (h) => h.replace('</head>', '<style>@import url("https://fonts.googleapis.com/css2?family=Roboto");</style></head>')),
+    attendu: { controle: 'ressources-externes', page: T },
+    appliquer: (d) => modifier(d, TROISIEME, (h) => h.replace('</head>', '<style>@import url("https://fonts.googleapis.com/css2?family=Roboto");</style></head>')),
   },
   {
     nom: 'video integree depuis un autre site',
-    attendu: { controle: 'ressources-externes', page: '/prestations/' },
-    appliquer: (d) => ajouter(d, 'prestations/index.html', '<iframe src="https://www.youtube.com/embed/x" title="video"></iframe>'),
+    attendu: { controle: 'ressources-externes', page: A },
+    appliquer: (d) => ajouter(d, AUTRE, '<iframe src="https://www.youtube.com/embed/x" title="video"></iframe>'),
   },
   {
     nom: 'script sur une page sans formulaire',
-    attendu: { controle: 'scripts', page: '/prestations/' },
-    appliquer: (d) => ajouter(d, 'prestations/index.html', '<script>console.log(1)</script>'),
+    attendu: { controle: 'scripts', page: A },
+    appliquer: (d) => ajouter(d, AUTRE, '<script>console.log(1)</script>'),
   },
   {
     nom: 'champ de formulaire sans libelle',
-    attendu: { controle: 'formulaire-libelles', page: '/contact/' },
-    appliquer: (d) => ajouter(d, 'contact/index.html', '<input name="societe" type="text">'),
+    attendu: { controle: 'formulaire-libelles', page: T },
+    appliquer: (d) => ajouter(d, TROISIEME, '<input name="societe" type="text">'),
   },
   {
     nom: 'lien au texte vague',
     attendu: { controle: 'liens-texte', page: '/' },
-    appliquer: (d) => ajouter(d, 'index.html', '<a href="/contact/">cliquez ici</a>'),
+    appliquer: (d) => ajouter(d, 'index.html', `<a href="${A}">cliquez ici</a>`),
   },
   {
     nom: 'lien sans texte',
     attendu: { controle: 'liens-texte', page: '/' },
-    appliquer: (d) => ajouter(d, 'index.html', '<a href="/contact/"></a>'),
+    appliquer: (d) => ajouter(d, 'index.html', `<a href="${A}"></a>`),
   },
   {
     nom: 'nouvel onglet sans noopener',
@@ -195,14 +211,14 @@ const sabotages = [
   },
   {
     nom: 'point d\'interrogation colle au mot',
-    attendu: { controle: 'typographie', page: '/contact/' },
-    appliquer: (d) => ajouter(d, 'contact/index.html', '<p>Une question?</p>'),
+    attendu: { controle: 'typographie', page: T },
+    appliquer: (d) => ajouter(d, TROISIEME, '<p>Une question?</p>'),
   },
   {
     nom: 'page orpheline (plus aucun lien vers elle)',
-    attendu: { controle: 'orphelines', page: '/prestations/' },
+    attendu: { controle: 'orphelines', page: A },
     appliquer: (d) => {
-      for (const f of pagesHtml(d)) writeFileSync(join(d, f), readFileSync(join(d, f), 'utf8').replace(/<a [^>]*href="\/prestations\/"[^>]*>.*?<\/a>/gs, ''));
+      for (const f of pagesHtml(d)) writeFileSync(join(d, f), readFileSync(join(d, f), 'utf8').replace(new RegExp(`<a [^>]*href="${echapper(A)}"[^>]*>.*?</a>`, 'gs'), ''));
     },
   },
   {
@@ -243,7 +259,8 @@ const autorises = [
   {
     nom: 'captcha du formulaire (seul domaine exterieur admis)',
     controles: ['ressources-externes', 'scripts'],
-    appliquer: (d) => ajouter(d, 'contact/index.html', '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>'),
+    applicable: FORMULAIRE !== null, // le captcha n'est admis que sur la page du formulaire
+    appliquer: (d) => ajouter(d, FORMULAIRE, '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>'),
   },
   {
     nom: 'espace insecable avant la ponctuation',
@@ -267,7 +284,7 @@ const autorises = [
     nom: 'page supprimee avec sa redirection',
     controles: ['redirections'],
     pagesEnLigne: ['/', '/ancienne-page/'],
-    appliquer: (d) => writeFileSync(join(d, '_redirects'), '/ancienne-page/ /prestations/ 301\n'),
+    appliquer: (d) => writeFileSync(join(d, '_redirects'), `/ancienne-page/ ${A} 301\n`),
   },
   {
     nom: 'coordonnees lues dans entreprise.json, couleur par variable',
@@ -313,6 +330,10 @@ for (const sabotage of sabotages) {
 }
 
 for (const cas of autorises) {
+  if (cas.applicable === false) {
+    console.log(`NON APPLICABLE - ${cas.nom} (aucune page avec <Formulaire />)`);
+    continue;
+  }
   const copie = copier();
   try {
     cas.appliquer(copie);
@@ -354,8 +375,8 @@ const casPublication = [
   },
   {
     nom: 'site de test sans noindex sur une page : publication refusee',
-    preparer: (d) => modifier(d, 'prestations/index.html', (h) => h.replace(/<meta name="robots"[^>]*>/g, '')),
-    conforme: (filtres) => filtres.some((p) => p.controle === 'indexation' && p.page.includes('/prestations/')),
+    preparer: (d) => modifier(d, AUTRE, (h) => h.replace(/<meta name="robots"[^>]*>/g, '')),
+    conforme: (filtres) => filtres.some((p) => p.controle === 'indexation' && p.page === A),
   },
   {
     nom: 'site de test dont le robots.txt laisse indexer : publication refusee',
